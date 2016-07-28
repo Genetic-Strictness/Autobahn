@@ -1,0 +1,152 @@
+h1
+{
+    background-color: silver;
+    text-align: center;
+    margin-left: 35%;
+    margin-right: 35%;
+}
+
+body
+{
+    background-color: white;
+}
+
+/* Special rendering for the titles of games */
+.gametitle
+{
+    color: black;
+    font-style: italic;
+    text-align: left;
+}
+
+p
+{
+    text-indent: 1rem;
+}
+
+div.center
+{
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+div.left_img{
+    overflow: auto;
+}
+
+div.left_img ul{
+    padding-left: 25%;
+}
+
+table
+{
+    border-collapse: collapse;
+}
+
+td, th
+{
+    border: 1px solid black;
+    text-align: left;
+    padding: 0.25em;
+}
+
+/* Used to color the checks and crosses in the table */
+td.yes
+{
+    color: green
+}
+
+td.no
+{
+    color: red
+}
+
+/* Hack to not draw an empty box */
+th.blank
+{
+    border: 0;
+}
+
+/*
+a
+{
+    color: inherit;
+    text-decoration: none;
+}
+
+a:hover
+{
+    text-decoration: underline;
+}
+*/
+
+/* 
+    Captioning from http://mikowl.com/2013/fun-with-figure-figcaption-elements/
+
+    Relatively position the figure so we can absolutely position 
+    the caption over the photo 
+*/
+figure.screenshot {
+  position: relative;
+  max-width: 66%;
+  overflow: hidden;
+}
+
+figure.shot {
+  position: relative;
+  max-width: 251px;
+    float: left;
+  margin: 5px;
+  float: left;
+}
+
+figure figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  -webkit-box-sizing: border-box; 
+     -moz-box-sizing: border-box; 
+          box-sizing: border-box;
+  width: 100%;
+  padding: 20px;
+  color: #FFF;
+  font-size: 1.5rem;
+  background: #000000; /* Fallback color */
+  background: rgba(0, 0, 0, .6);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out;
+  text-align: center;
+}
+
+figure:hover figcaption
+{
+    opacity: 1;
+}
+
+
+figure img
+{
+    max-width: 100%;
+    height: auto;
+}
+
+/* Separates the game into its own box so a viewer knows what content belongs to
+   which game */
+div.game
+{
+    border: 2px solid;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    margin-bottom: 0.5rem;
+    background-color: silver;
+}
+
+iframe.vid
+{
+    width: 560px;
+    height: 315px;
+}
