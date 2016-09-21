@@ -1,39 +1,30 @@
-<html>
-  <head>
-    <title>AUTOBAHN Project</title>
-    <link rel="stylesheet" type="text/css" href="./style.css">
-  </head>
-<body>
-  <h1>AUTOBAHN: Using Genetic Algorithms to Infer Strictness Annotations</h1>
-  <div class="center">
-      Yisu Remy Wang<br>
-      Diogenes A. Nunez<br>
-      Kathleen Fisher<br>
-  </div>
-  <div id="abstract">
-    <h2>Abstract</h2>
-    <p>Although laziness enables beautiful code, it comes with non-trivial performance costs. 
-    The ghc compiler for Haskell has optimizations to reduce those costs, but the optimizations are not sufficient.
-    As a result, Haskell also provides a variety of strictness annotations so that users can indicate program points 
-    where an expression should be evaluated eagerly. Skillful use of those annotations is a black art, known only to 
-    expert Haskell programmers. In this paper, we introduce AUTOBAHN , a tool that uses genetic algorithms to automatically 
-    infer strictness annotations that improve program performance on representative inputs. Users examine the suggested 
-    annotations for soundness and can instruct AUTOBAHN to automatically produce modified sources. Experiments on 60 
-    programs from the NoFib benchmark suite show that AUTOBAHN can infer annotation sets that improve runtime performance
-    by a geometric mean of 8.5%. Case studies show AUTOBAHN can reduce the live size of a GC simulator by 99% and infer 
-    application-specific annotations for Aeson library code. A 10-fold cross-validation study shows the AUTOBAHN -optimized 
-    GC simulator generally outperforms a version optimized by an expert.<p>
-  </div>
-  <div id="links">
-    <h2>Links</h2>
-    Project Repository: <a href="https://github.com/Genetic-Strictness/Autobahn">Github</a>
-  </div>
-  <div id="Publications">
-    <h2>Publications</h2>
-    <ul>
-      <li>Haskell 16</li>
-    </ul>
-    </div>
-  </div>
-</body>
-</html>
+**AUTOBAHN: Using Genetic Algorithms to Infer Strictness Annotations**
+      *Yisu Remy Wang,  Diogenes A. Nunez,  Kathleen Fisher*
+
+# Abstract
+  
+Although laziness enables beautiful code, it comes with non-trivial performance costs.
+The ghc compiler for Haskell has optimizations to reduce those costs, but the optimizations are not sufficient.
+As a result, Haskell also provides a variety of strictness annotations so that users can indicate program points 
+where an expression should be evaluated eagerly. Skillful use of those annotations is a black art, known only to 
+expert Haskell programmers. In this paper, we introduce AUTOBAHN, a tool that uses genetic algorithms to automatically 
+infer strictness annotations that improve program performance on representative inputs. Users examine the suggested 
+annotations for soundness and can instruct AUTOBAHN to automatically produce modified sources. Experiments on 60 
+programs from the NoFib benchmark suite show that AUTOBAHN can infer annotation sets that improve runtime performance
+by a geometric mean of 8.5%. Case studies show AUTOBAHN can reduce the live size of a GC simulator by 99% and infer 
+application-specific annotations for Aeson library code. A 10-fold cross-validation study shows the AUTOBAHN -optimized 
+GC simulator generally outperforms a version optimized by an expert.<p>
+
+# Links
+  
+Project Repository: [Github](https://www.youtube.com/watch?v=wJ9isuDjuPg)
+
+# Publications
+
+ - Haskell 16
+
+<style>h1:before, h2:before { content: none; }</style>
+
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
+
+
