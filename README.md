@@ -4,7 +4,7 @@ A tool for inferring strictness annotations in Haskell programs using a genetic 
 
 ## Build and Run
 
-Autobahn uses stack to build and run.
+Autobahn uses [stack](https://github.com/commercialhaskell/stack) to build and run.
 
 Build with
 
