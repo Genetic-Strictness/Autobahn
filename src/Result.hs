@@ -18,10 +18,17 @@ resultDir :: String
 resultDir = "autobahn-results"
 
 linkToCss :: String
-linkToCss = "http://www.eecs.tufts.edu/~dan/ids/style.css"
+linkToCss = "h1 {background-color: silver; text-align: center; margin-left: 35%; margin-right: 35%;}"
+            ++ "body {background-color: white;}"
+            ++ "p {text-indent: 1rem;}"
+            ++ "div.center {height: 100%; display: flex; align-items: center; justify-content: center;}"
+            ++ "div.left_img{overflow: auto;}"
+            ++ "div.left_img ul{padding-left: 25%;}"
+            ++ "table{border-collapse: collapse;}"
+            ++ "td, th{border: 1px solid black; text-align: left; padding: 0.25em;}"
 
 resultPageStyle :: Html
-resultPageStyle = (thelink noHtml) ! [rel "stylesheet", thetype "text/css", href linkToCss]
+resultPageStyle = style $ toHtml linkToCss
 
 programName :: FilePath -> Maybe String -> String
 programName fp Nothing = fp
