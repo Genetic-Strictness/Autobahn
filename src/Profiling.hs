@@ -9,10 +9,6 @@ import System.Exit
 import System.Timeout
 import GHC.Stats
 
--- import Criterion.Main
--- import Criterion.Measurement
--- import Criterion.Types (measTime, measAllocated, fromInt)
-
 -- 
 -- PROFILING EXTERNAL PROJECT
 --
@@ -24,12 +20,9 @@ instance Show MetricType where
     show GC = "gc"
     show RUNTIME = "runtime"
 
--- TODO assuming only one file Main.hs; assuming proj doesn't take input. 
 -- Build a cabal project. Project must be configured with cabal. `projDir` is in the current dir
 buildProj :: FilePath -> IO ExitCode
 buildProj projDir = system $ "cd " ++ projDir ++ "; cabal configure -v0; cabal build -v0"
-
--- TODO use current working dir and save compile command in config.hs
 
 -- Time a project
 instance NFData ExitCode
