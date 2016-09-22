@@ -13,7 +13,11 @@ Build with
 > stack build
 ```
 
-The executable is in the dist directory.
+Then run the executable with
+
+```
+> stack exec Autobahn
+```
 
 Autobahn will either take a configuration file or ask the user for inputs on the command line
 to craft a configuration.
