@@ -76,24 +76,18 @@ gmain autobahnCfg = do
     putStrLn $ "pop: " ++ (show $ pop autobahnCfg)
     putStrLn $ "gens: " ++ (show $ gen autobahnCfg)
     putStrLn $ "arch: " ++ (show $ arch autobahnCfg)
-  -- Configurations
-    -- [projDir, popS, gensS, archS] <- getArgs
-    -- let [pop, gens, arch] = map read [popS, gensS, archS]
     
     checkBaseProgram baseTime baseMetric
     
     let absPaths = map (\x -> projDir ++ "/" ++ x) files
         fitnessTimeLimit = deriveFitnessTimeLimit baseTime
-    -- putStr "Basetime is: "; print baseTime
 
   -- Pool: bit vector representing original progam
     progs <- sequence $ map readFile absPaths
-    -- vecSize <- rnf prog `seq` placesToStrict mainPath
     bs <- sequence $ map readBangs absPaths
     let !vecPool = rnf progs `seq` map B.fromBits bs
 
   -- Do the evolution!
-  -- Note: if either of the last two arguments is unused, just use () as a value
     es <- evolveVerbose g cfg vecPool (baseMetric,
                                        fitness projDir args fitnessTimeLimit fitnessReps metric files)
     let e = snd $ head es :: [BangVec]
@@ -101,7 +95,6 @@ gmain autobahnCfg = do
 
   -- Write result
     putStrLn $ "best entity (GA): " ++ (unlines $ (map (printBits . B.toBits) e))
-    --putStrLn prog'
     newPath <- return $ projDir ++ "/" ++ "autobahn-survivor"
     code <- system $ "mkdir -p " ++ newPath
     
@@ -121,16 +114,3 @@ gmain autobahnCfg = do
        getScore s = case s of
                         Nothing -> error "filter should have removed all Nothing"
                         Just n -> n
-{-
--- Experiments to tune Genetic Algorithm parameters
---
-emain :: IO ()
-emain = do
-  system "git rev-parse --short HEAD"
-  putStr "^git hash\n"
-  [projDir, maxPopS, maxGenS, maxArchS] <- getArgs
-  let [maxPop, maxGen, maxArch] = map read [maxPopS, maxGenS, maxArchS]
-  let cfgs :: [(Int, Int, Int)]
-      cfgs = [(pop, gen, arch) | pop <- [1..maxPop], gen <- [1..maxGen], arch <- [maxArch]]
-  sequence_ $ map (gmain projDir) cfgs
--}
