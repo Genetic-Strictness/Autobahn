@@ -9,9 +9,13 @@ Autobahn uses [stack](https://github.com/commercialhaskell/stack) to build and r
 Build with
 
 ```
+> stack init --solver
 > stack setup
 > stack build
 ```
+
+For newer versions of GHC, `stack init` may fail to resolve the necessary packages,
+in which case you will need to initialize with `stack init --solver --install-ghc`.
 
 Then run the executable with
 
