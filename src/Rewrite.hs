@@ -18,20 +18,20 @@ findPats = universeBi
 
 placesToStrict :: String -> IO Int
 placesToStrict path = do
-  content <- readFile path
   let mode = ParseMode path Haskell2010 [EnableExtension BangPatterns] False False Nothing
-  case parseModuleWithMode mode content of
+  res <- parseFileWithMode mode path
+  case res of
     ParseFailed _ e -> error e
-    ParseOk a       -> rnf content `seq` return $ length $ findPats a
+    ParseOk a       -> return $ length $ findPats a
 
 
 readBangs :: String -> IO [Bool]
 readBangs path = do
-  content <- readFile path
   let mode = ParseMode path Haskell2010 [EnableExtension BangPatterns] False False Nothing
-  case parseModuleWithMode mode content of
+  res <- parseFileWithMode mode path
+  case res of
     ParseFailed _ e -> error e
-    ParseOk a       -> rnf content `seq` return $ findBangs $ findPats a
+    ParseOk a       -> return $ findBangs $ findPats a
 
 findBangs :: [Pat] -> [Bool]
 findBangs = map isBang
@@ -40,11 +40,11 @@ findBangs = map isBang
 
 editBangs :: String -> [Bool] -> IO String
 editBangs path vec = do
-  content <- readFile path
   let mode = ParseMode path Haskell2010 [EnableExtension BangPatterns] False False Nothing
-  case parseModuleWithMode mode content of
+  res <- parseFileWithMode mode path
+  case res of
     ParseFailed _ e -> error $ path ++ ": " ++ e
-    ParseOk a       -> rnf content `seq` return $ prettyPrint $ stripTop $ fst $ changeBangs vec a
+    ParseOk a       -> return $ prettyPrint $ stripTop $ fst $ changeBangs vec a
 
 changeBangs :: [Bool] -> Module -> (Module, [Bool])
 changeBangs bools x = runState (transformBiM go x) bools
