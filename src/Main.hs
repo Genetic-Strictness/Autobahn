@@ -43,7 +43,7 @@ fitness projDir args timeLimit reps metric files bangVecs = do
     !progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits bangVecs) 
     rnf progs `seq` sequence $ map (uncurry writeFile) $ zip absPaths progs'
   -- Benchmark new
-    buildProj projDir
+    -- buildProj projDir
     !(_, newMetricStat) <- benchmark projDir args timeLimit metric reps
   -- Recover original
     !_ <- sequence $ map (uncurry writeFile) $ zip absPaths progs

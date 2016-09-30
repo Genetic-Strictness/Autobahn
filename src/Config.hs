@@ -186,7 +186,7 @@ calculateFitRuns projDir args timeLimit metric (accTime, accMetric) n = do
  -}
 convertTimeToGens :: String -> String -> Double -> MetricType -> IO (Int, Int, Int, Int64, Double, Double)
 convertTimeToGens projDir args timeLimit metric = do
-                          buildProj projDir
+                          -- buildProj projDir
                           (baseTime, baseMetric) <- benchmark projDir args (timeLimit) metric 1
                           (meanTime, meanMetric, nRuns) <- calculateFitRuns projDir args (timeLimit) metric (baseTime, baseMetric) 1
                           -- Remove the number of program runs per chromosome from time limit
