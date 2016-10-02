@@ -53,7 +53,7 @@ fitness projDir args timeLimit reps metric files bangVecs = do
 main :: IO () 
 main = do 
   hSetBuffering stdout LineBuffering
-  print "Configure optimization..."
+  putStrLn "Configure optimization..."
   cfgExist <- doesFileExist cfgFile
   cfg <- if cfgExist then readCfg cfgFile else cliCfg
   putStrLn "Setting up optimization process..."
