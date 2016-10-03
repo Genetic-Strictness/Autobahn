@@ -94,6 +94,9 @@ gmain autobahnCfg = do
     let e = snd $ head es :: [BangVec]
     progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits e)
 
+  -- Write the original files back to disk
+    sequence $ map (uncurry writeFile) $ zip absPaths progs
+
   -- Write result
     putStrLn $ "best entity (GA): " ++ (unlines $ (map (printBits . B.toBits) e))
     newPath <- return $ projDir ++ "/" ++ "autobahn-survivor"
