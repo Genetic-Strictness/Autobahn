@@ -2,8 +2,8 @@ module Config where
 
 import GA
 import System.Random
-import Data.Int
-import Profiling
+import Types
+import Profiling (benchmark)
 
 import Text.ParserCombinators.Parsec
 import qualified Text.Parsec.String as PS
@@ -27,6 +27,9 @@ runs = 1
 -- CONFIG FOR GENETIC ALG
 -- 
 
+deriveFitnessTimeLimit :: Double -> Double
+deriveFitnessTimeLimit = (*) 2
+
 crossRate  = 0.6 :: Float
 muteRate   = 0.4 :: Float
 crossParam = 0.0 :: Float
@@ -35,46 +38,6 @@ checkpoint = False :: Bool
 rescoreArc = False :: Bool
 
 g = mkStdGen 0 -- random generator
-
-data Cfg = Cfg { projectDir :: String
-               , timeBudget :: Double
-               , getBaseTime :: Double
-               , coverage :: [String]
-               , fitnessMetric :: MetricType
-               , getBaseMetric :: Double
-               , pop :: Int
-               , gen :: Int
-               , arch :: Int
-               , fitnessRuns :: Int64
-               , inputArgs :: String
-               } deriving Show
-
-defaultProjDir :: FilePath
-defaultProjDir = "."
-
-defaultTimeLimit :: Double
-defaultTimeLimit = 3
-
-defaultTimeLimitSec :: Double
-defaultTimeLimitSec = defaultTimeLimit * 60 * 60
-
-defaultCoverage :: String
-defaultCoverage = "Main.hs"
-
-defaultMetric :: MetricType
-defaultMetric = RUNTIME
-
-defaultInput :: String
-defaultInput = ""
-
-defaultFitRuns :: Integer
-defaultFitRuns = toInteger 1
-
-emptyCfg :: Cfg
-emptyCfg = Cfg defaultProjDir defaultTimeLimitSec (0-1) (words defaultCoverage) defaultMetric (0-1) 1 1 1 (fromInteger defaultFitRuns) defaultInput
-
-deriveFitnessTimeLimit :: Double -> Double
-deriveFitnessTimeLimit = (*) 2
 
 readLnWDefault :: Read a => a -> IO a
 readLnWDefault def = do
@@ -87,17 +50,18 @@ readLnWDefault def = do
  - Create the configuration specific to the GA library
  -}
 createGAConfig :: Cfg -> GAConfig
-createGAConfig cfg = GAConfig pop' arch' gens' xRate mRate xParam mParam chkpt rescore
-                     where
-                       pop' = pop cfg
-                       gens' = gen cfg
-                       arch' = arch cfg
-                       xRate = crossRate
-                       mRate = muteRate
-                       xParam = crossParam
-                       mParam = muteParam
-                       chkpt = checkpoint
-                       rescore = rescoreArc
+createGAConfig cfg = GAConfig 
+  { getPopSize            = pop cfg
+  , getArchiveSize        = arch cfg
+  , getMaxGenerations     = gen cfg
+  , getCrossoverRate      = crossRate
+  , getMutationRate       = muteRate
+  , getCrossoverParam     = crossParam
+  , getMutationParam      = muteParam
+  , getRescoreArchive     = rescoreArc
+  , getWithCheckpointing  = checkpoint
+  }
+
 {-
  -  Read from the command line and produce an Autobahn Configuration
  -}
@@ -108,7 +72,7 @@ cliCfg = do
 
   putStr "Path to project program sources [\".\"]:"
   hFlush stdout
-  projDir <- readLnWDefault $ (show defaultProjDir)
+  projDir <- readLnWDefault defaultProjDir
 
   putStr "Time alloted for Autobahn [3h]:"
   hFlush stdout
@@ -117,6 +81,10 @@ cliCfg = do
   putStr "File(s) to add/remove bangs in [\"Main.hs\"]:"
   hFlush stdout
   srcs <- readLnWDefault defaultCoverage
+
+  putStr "Name of main file to run [\"Main.hs\"]:"
+  hFlush stdout
+  exe <- readLnWDefault "Main.hs"
 
   putStr "Performance metric to optimize [\"runtime\"]:"
   hFlush stdout
@@ -136,12 +104,13 @@ cliCfg = do
                                , ("coverage = " ++ srcs)
                                , ("targetMetric = " ++ metric)
                                , ("inputArg = " ++ args)
-                               , ("fitnessRuns = " ++ nRuns)]
+                               , ("fitnessRuns = " ++ nRuns)
+                               , ("executable = " ++ exe)]
   -- That we now parse that file
   result <- return $ parseCfgFile "cli" 1 1 cliCfgFile
   case result of
        Left err -> error $ show err
-       Right ast -> calculateInputs $ convertToCfg ast emptyCfg
+       Right ast -> calculateInputs $ convertToCfg ast defaultCfg
 
 readCfg :: FilePath -> IO Cfg
 readCfg fp = do {
@@ -149,7 +118,7 @@ readCfg fp = do {
           ; x <- return $ parseCfgFile fp 1 1 text
           ; case x of
                 Left err -> error $ show err
-                Right ast -> calculateInputs $ convertToCfg ast emptyCfg
+                Right ast -> calculateInputs $ convertToCfg ast defaultCfg
           }
 
 {-
@@ -159,48 +128,45 @@ readCfg fp = do {
  -    (2) generations * population * (2 * baseTime) = timeLimit
  -}
 heuristic :: String -> Double -> Double -> Int64 -> (Int, Int, Int)
-heuristic projDir baseTime timeLimit nRuns = ((round pop), (round gen), (round arch))
-                                       where
-                                       fitnessTimeLimit = (fromInteger . toInteger $ nRuns) * deriveFitnessTimeLimit baseTime
-                                       n = (timeLimit / fitnessTimeLimit) :: Double
-                                       pop = (sqrt $ (3 * n)/4) :: Double
-                                       gen = (4 * pop)/3 :: Double
-                                       arch = if (round $ pop/2) <= 0 then 1 else pop/2
+heuristic projDir baseTime timeLimit nRuns = (round pop, round gen, round arch)
+  where
+    fitnessTimeLimit = (fromInteger . toInteger $ nRuns) * deriveFitnessTimeLimit baseTime
+    n = (timeLimit / fitnessTimeLimit) :: Double
+    pop = (sqrt $ (3 * n)/4) :: Double
+    gen = (4 * pop)/3 :: Double
+    arch = if (round $ pop/2) <= 0 then 1 else pop/2
 
-calculateFitRuns :: String -> String -> Double -> MetricType -> (Double, Double) -> Int64 -> IO (Double, Double, Int64)
-calculateFitRuns projDir args timeLimit metric (accTime, accMetric) n = do
-                                            (baseTime, baseMetric) <- benchmark projDir args (timeLimit) metric (1 :: Int64)
-                                            let (accTime', accMetric') = (baseTime + accTime, baseMetric + accMetric)
-                                                (newTimeMean, newMetricMean)= (accTime' / (fromInteger . toInteger $ n+1), accMetric' / (fromInteger . toInteger $ n+1))
-                                                percChange = abs $ (currentTimeMean - newTimeMean)/currentTimeMean
-                                            if baseTime < 0 then error "Program did not run" else print newTimeMean
-                                            if percChange <= 0.05
-                                              then return $ (newTimeMean, newMetricMean, n)
-                                              else calculateFitRuns projDir args timeLimit metric (accTime', accMetric') (n + 1)
-                                            where
-                                               currentTimeMean = accTime / (fromInteger . toInteger $ n)
+--calculateFitRuns :: String -> String -> Double -> MetricType -> (Double, Double) -> Int64 -> IO (Double, Double, Int64)
+--calculateFitRuns projDir args timeLimit metric (accTime, accMetric) n = do
+calculateFitRuns :: Cfg -> (Double, Double) -> Int64 -> IO (Double, Double, Int64)
+calculateFitRuns cfg (accTime, accMetric) n = do
+  (baseTime, baseMetric) <- benchmark cfg (1 :: Int64)
+  let (accTime', accMetric') = (baseTime + accTime, baseMetric + accMetric)
+      (newTimeMean, newMetricMean) = (accTime' / (fromInteger . toInteger $ n+1), accMetric' / (fromInteger . toInteger $ n+1))
+      percChange = abs $ (currentTimeMean - newTimeMean)/currentTimeMean
+  if baseTime < 0 then error "Program did not run" else print newTimeMean
+  if percChange <= 0.05
+    then return $ (newTimeMean, newMetricMean, n)
+    else calculateFitRuns cfg (accTime', accMetric') (n + 1)
+  where
+     currentTimeMean = accTime / (fromInteger . toInteger $ n)
 
 {-
  - Convert the time budget to a number of generations,
  - population size, and archive/selection size.
  -}
-convertTimeToGens :: String -> String -> Double -> MetricType -> IO (Int, Int, Int, Int64, Double, Double)
-convertTimeToGens projDir args timeLimit metric = do
-                          -- buildProj projDir
-                          (baseTime, baseMetric) <- benchmark projDir args (timeLimit) metric 1
-                          (meanTime, meanMetric, nRuns) <- calculateFitRuns projDir args (timeLimit) metric (baseTime, baseMetric) 1
-                          -- Remove the number of program runs per chromosome from time limit
-                          n <- return . fromInteger . toInteger $ runs :: IO Double
-                          timeLimit' <- (return $ timeLimit / n)
-                          (pop, gen, arch) <- return $ heuristic projDir meanTime timeLimit' nRuns
-                          return $ (pop, gen, arch, nRuns, meanTime, meanMetric)
-data CfgAST = BUDGET Double
-            | DIR String
-            | SRCS [String]
-            | METRIC MetricType
-            | INPUTS [String]
-            | FITRUNS Integer
-            | FILE [CfgAST] deriving Show
+convertTimeToGens :: Cfg -> IO (Int, Int, Int, Int64, Double, Double)
+convertTimeToGens (cfg @ Cfg
+  { timeBudget = timeLimit
+  , projectDir = projDir
+  }) = do
+      (baseTime, baseMetric) <- benchmark cfg 1
+      (meanTime, meanMetric, nRuns) <- calculateFitRuns cfg (baseTime, baseMetric) 1
+      -- Remove the number of program runs per chromosome from time limit
+      let n = fromInteger . toInteger $ runs :: Double
+          timeLimit' = timeLimit / n
+          (pop, gen, arch) = heuristic projDir meanTime timeLimit' nRuns
+      return $ (pop, gen, arch, nRuns, meanTime, meanMetric)
 
 hoursToSeconds :: Double -> Double
 hoursToSeconds = (*) $ 60 * 60
@@ -214,15 +180,12 @@ convertToCfg ((SRCS srcs) : ast) cfg = convertToCfg ast $ cfg { coverage = srcs 
 convertToCfg ((FILE inner) : ast) cfg = convertToCfg ast $ convertToCfg inner cfg
 convertToCfg ((INPUTS args) : ast) cfg = convertToCfg ast $ cfg { inputArgs = concat args }
 -- Ignore the other AST Nodes
+convertToCfg ((EXE exe) : ast) cfg = convertToCfg ast $ cfg { executable = exe }
 convertToCfg ((_) : ast)          cfg = convertToCfg ast cfg
 
 calculateInputs :: Cfg -> IO Cfg
 calculateInputs cfg = do
-            metric <- return $ fitnessMetric cfg
-            timeLimit <- return $ timeBudget cfg
-            let projDir = projectDir cfg
-                args = inputArgs cfg
-            (pop', gen', arch', nRuns, baseTime, baseMetric) <- convertTimeToGens projDir args timeLimit metric
+            (pop', gen', arch', nRuns, baseTime, baseMetric) <- convertTimeToGens cfg
             return $ cfg { getBaseTime = baseTime
                          , getBaseMetric = baseMetric
                          , pop = pop'
@@ -275,6 +238,7 @@ configOption = do {
 configTopLevel :: PS.Parser CfgAST
 configTopLevel = projDirRule <||> budgetRule <||> coverageRule
                <||> targetMetricRule <||> inputArgRule <||> fitnessRunRule
+               <||> exeRule
 
 budgetRule :: PS.Parser CfgAST
 budgetRule = do {
@@ -336,6 +300,13 @@ fitnessRunRule = do {
                  ; return $ FITRUNS x
                  }
 
+exeRule :: PS.Parser CfgAST
+exeRule = do
+  reserved "executable"
+  reservedOp "="
+  exe <- stringLiteral
+  return $ EXE exe
+
 ---- Lexer ----
 
 lexer :: PT.TokenParser ()
@@ -343,7 +314,7 @@ lexer = PT.makeTokenParser $ haskellStyle
   { reservedOpNames = ["="]
     , reservedNames = ["budgetTime", "confidence", "coverage",
                        "targetMetric", "inputArg", "fitnessRuns",
-                       "projectDirectory"]
+                       "projectDirectory", "executable"]
   }
 
 whiteSpace = PT.whiteSpace  lexer

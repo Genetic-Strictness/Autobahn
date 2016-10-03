@@ -1,5 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 
+import Types
 import Rewrite
 import Profiling
 import GeneAlg
@@ -35,17 +36,17 @@ checkBaseProgram baseTime baseMetric = if baseTime == -1
                                                  "Autobahn cannot optimize."
                                             else putStr $ "Base measurement is: " ++ (show baseTime)
 
-fitness :: FilePath -> String -> Double -> Int64 -> MetricType -> [FilePath] -> [BangVec] -> IO Time
-fitness projDir args timeLimit reps metric files bangVecs = do
+fitness :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO Time
+fitness cfg reps files bangVecs = do
   -- Read original
-    let absPaths = map (\x -> projDir ++ "/" ++ x) files
+    let absPaths = map (\x -> projectDir cfg ++ "/" ++ x) files
     !progs  <- sequence $ map readFile absPaths
   -- Rewrite from gene
     !progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits bangVecs) 
     rnf progs `seq` sequence $ map (uncurry writeFile) $ zip absPaths progs'
   -- Benchmark new
     -- buildProj projDir
-    !(_, newMetricStat) <- benchmark projDir args timeLimit metric reps
+    !(_, newMetricStat) <- benchmark cfg reps
   -- Recover original
     !_ <- sequence $ map (uncurry writeFile) $ zip absPaths progs
     return newMetricStat
@@ -66,10 +67,8 @@ gmain :: Cfg -> IO ()
 gmain autobahnCfg = do
     let projDir = projectDir autobahnCfg
         cfg = createGAConfig autobahnCfg
-        metric = fitnessMetric autobahnCfg
         files = coverage autobahnCfg
         fitnessReps = fitnessRuns autobahnCfg
-        args = inputArgs autobahnCfg
         baseTime  = getBaseTime autobahnCfg
         baseMetric  = getBaseMetric autobahnCfg
     putStrLn $ "Optimizing " ++ projDir
@@ -90,7 +89,7 @@ gmain autobahnCfg = do
 
   -- Do the evolution!
     es <- evolveVerbose g cfg vecPool (baseMetric,
-                                       fitness projDir args fitnessTimeLimit fitnessReps metric files)
+                                       fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
     let e = snd $ head es :: [BangVec]
     progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits e)
 
@@ -99,7 +98,7 @@ gmain autobahnCfg = do
 
   -- Write result
     putStrLn $ "best entity (GA): " ++ (unlines $ (map (printBits . B.toBits) e))
-    newPath <- return $ projDir ++ "/" ++ "autobahn-survivor"
+    let newPath = projDir ++ "/" ++ "autobahn-survivor"
     code <- system $ "mkdir -p " ++ newPath
     
     let survivorPaths = map (\x -> projDir ++ "/" ++ "autobahn-survivor/" ++ x) files
@@ -110,11 +109,11 @@ gmain autobahnCfg = do
     putStrLn ">>>>>>>>>>>>>>FINISH OPTIMIZATION>>>>>>>>>>>>>>>"
 
       -- Write result page
-    es' <- return $ filter (\x -> fst x /= Nothing) es
-    bangs <- return $ (map snd es') :: IO [[BangVec]]
+    let es' = filter (\x -> fst x /= Nothing) es
+        bangs = (map snd es') :: [[BangVec]]
     newFps <- createResultDirForAll projDir absPaths bangs
-    f <- return $ map fst es'
-    scores <- return $ map getScore f
+    let f = map fst es'
+        scores = map getScore f
     genResultPage projDir scores newFps projDir Nothing cfg 0.0 1
 
     where

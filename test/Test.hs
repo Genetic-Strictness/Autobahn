@@ -16,17 +16,21 @@ import Test.HUnit
 import Test.QuickCheck (Property, quickCheck, (==>))
 import qualified Test.QuickCheck.Monadic as TQM
 
+run x = do
+  putStrLn $ "Running: " ++ x
+  system x
+
 autobahnMe :: FilePath -> [FilePath] -> IO ExitCode
 autobahnMe projDir srcNames = do
   pwd <- getCurrentDirectory
   setCurrentDirectory projDir
   -- Assume the worst - Autobahn was already run and we clobbered the source file:
-  mapM (\s -> system $ "git checkout " ++ s) srcNames
-  system $ "rm -rf autobahn-results autobahn-survivor dist"
+  mapM (\s -> run $ "git checkout " ++ s) srcNames
+  run "rm -rf autobahn-results autobahn-survivor dist"
   {- Nesting of calls to stack / cabal doesn't seem to play
      nicely - need to unset GHC_PACKAGE_PATH as
      per https://github.com/haskell/cabal/issues/1944 -}
-  rc <- system $ "unset GHC_PACKAGE_PATH && Autobahn"
+  rc <- run "unset GHC_PACKAGE_PATH && Autobahn"
   setCurrentDirectory pwd
   return rc
 
@@ -37,9 +41,9 @@ helloFib = do
   let base = "test/hello/"
   rc <- autobahnMe base ["hello.hs"]
   assert $ rc == ExitSuccess
-  let results   = base ++ "autobahn-results"
+  let results  = base ++ "autobahn-results"
   let survivor = base ++ "autobahn-survivor"
-  assert $ dirExists results
+
   assert $ dirExists survivor
   assert $ dirExists $ results ++ "/1"
   assert $ fileExists $ survivor ++ "/hello.hs"
