@@ -16,6 +16,7 @@ import System.Process
 import System.Directory
 import Text.Read
 import Control.DeepSeq
+import System.FilePath
 
 import Debug.Trace
 
@@ -99,6 +100,9 @@ gmain autobahnCfg = do
     code <- system $ "mkdir -p " ++ newPath
     
     let survivorPaths = map (\x -> projDir ++ "/" ++ "autobahn-survivor/" ++ x) files
+
+    let survivorDirs = map (takeDirectory) survivorPaths
+    sequence $ map (\x -> system $ "mkdir -p " ++ x) survivorDirs
     sequence $ map (uncurry writeFile) $ zip survivorPaths progs'
     putStrLn ">>>>>>>>>>>>>>FINISH OPTIMIZATION>>>>>>>>>>>>>>>"
 
