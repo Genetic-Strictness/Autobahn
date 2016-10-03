@@ -100,12 +100,12 @@ genResultPage projDir chroms fps fp name cfg diversity fitnessRuns = writeFile (
 
 createResultDir ::FilePath -> [FilePath] -> Int -> [BV] -> IO FilePath
 createResultDir projDir srcs n bvs = do
-      newPath <- return $ projDir ++ "/" ++ resultDir ++ "/" ++ show n ++ "/"
+      let newPath = projDir ++ "/" ++ resultDir ++ "/" ++ show n ++ "/"
       code <- system $ "mkdir -p " ++ newPath
       progs <- sequence $ map readFile srcs
       progs' <- sequence $ zipWith editBangs srcs (map toBits bvs)
       -- Recover the names of the source files
-      srcs' <- return $ map (\x -> newPath ++ x) $ map (\x -> x \\ projDir) srcs
+      let srcs' = map (\x -> newPath ++ x) $ map (\x -> x \\ projDir) srcs
       -- Write these new files into the new project directory
       rnf progs `seq` sequence $ zipWith writeFile srcs' progs'
       return newPath
