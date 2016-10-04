@@ -1,0 +1,6 @@
+projectDirectory = "/home/karl/w/autobahn/test/hello"
+budgetTime = 0.01h
+coverage = "hello.hs"
+targetMetric = "peakAlloc"
+fitnessRuns = 1
+inputArg = "40"

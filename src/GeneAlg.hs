@@ -21,7 +21,12 @@ type BangVec = BV
 type Time = Double
 type Score = Double
 type FitnessRun = [BangVec] -> IO Score
-instance Read BangVec -- TODO is this ok?
+
+-- TODO: implement in case we ever need to parse Bit (Bang) Vectors
+readsBV = undefined
+
+instance Read BangVec where -- TODO is this ok?
+  readsPrec _ s = readsBV
 
 printBits :: [Bool] -> String
 printBits = concatMap (\b -> if b then "1" else "0")

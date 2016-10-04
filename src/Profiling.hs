@@ -8,6 +8,7 @@ import System.Process
 import System.Exit
 import System.Timeout
 import GHC.Stats
+import System.FilePath.Posix (takeFileName)
 
 -- 
 -- PROFILING EXTERNAL PROJECT
@@ -24,12 +25,6 @@ instance Show MetricType where
 buildProj :: FilePath -> IO ExitCode
 buildProj projDir = system $ "cd " ++ projDir ++ "; cabal configure -v0; cabal build -v0"
 
--- Time a project
-instance NFData ExitCode
-  where 
-    rnf ExitSuccess = ()
-    rnf (ExitFailure _) = ()
-
 statsFromMetric :: MetricType -> [(String, String)] -> Double
 statsFromMetric RUNTIME stats = let Just muts = lookup "mutator_cpu_seconds" stats
                                     Just gcs = lookup "GC_cpu_seconds" stats
@@ -41,17 +36,18 @@ statsFromMetric GC      stats = let Just gcs = lookup "GC_cpu_seconds" stats
 
 benchmark :: FilePath -> String -> Double -> MetricType -> Int64 -> IO (Double, Double)
 benchmark projDir args timeLimit metric runs =  do
+  putStrLn $ "Running: " ++ runProj
   buildExitC <- buildProj projDir
   case buildExitC of
     ExitSuccess -> executeProj
     _ -> return ((0 - 1), (0 - 1))
   where
-    runProj = "timeout " ++ (show . round $ timeLimit) ++ "s ./" ++ projDir ++ "/dist/build/" 
-                     ++ projDir ++ "/" ++ projDir 
+    runProj = "timeout " ++ (show . round $ timeLimit) ++ "s " ++ projDir ++ "/dist/build/" 
+                     ++ takeFileName projDir ++ "/" ++ takeFileName projDir
+                     ++ " " ++ args
                      ++ " -q +RTS -ttiming.temp --machine-readable"
-                     ++ args
-                     ++ "> /dev/null"
-    cleanProj = "rm timing.temp"
+                     ++ " > /dev/null"
+    cleanProj = "rm -f timing.temp"
     executeProj = do 
       exitc <- system runProj 
       case exitc of
