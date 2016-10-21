@@ -1,0 +1,3 @@
+import MainTest
+
+main = maintest

@@ -1,0 +1,318 @@
+deathAlyzer.hs:			 heap :: !G.Graph
+deathAlyzer.hs:			 time :: !Int
+deathAlyzer.hs:simStep (m,!marks) (Alloc oid size ty tid) = if doCollection then
+deathAlyzer.hs:						(!collectedMachine,!newMarks) = wholeHeapCollect m
+deathAlyzer.hs:simStep (m,!marks) (Update old origin new tid) = (m{heap=heap'}, marks)
+deathAlyzer.hs:					!heap' = G.insEdge origin new $! G.delEdge origin old (heap m)
+deathAlyzer.hs:simStep (m,!marks) (Entry mid rid tid) = (m{time= (time m) + 1},marks)
+deathAlyzer.hs:simStep (m,!marks) (Exit mid rid tid) = (m{time= (time m) +1},marks)
+deathAlyzer.hs:	 contents <- L.readFile (args !! 0)
+deathAlyzer.hs:	 print $! loadDeathMap contents
+Binary file EtParser.hi matches
+EtParser.hs:data Record =  Alloc {-# UNPACK #-} !Int !Int L.ByteString !Int
+EtParser.hs:	     | Update !Int !Int !Int !(Maybe Int) !Int
+EtParser.hs:	     | Death !Int
+EtParser.hs:	     | Entry !Int !Int !Int
+EtParser.hs:	     | Exit  !Int !Int !Int
+EtParser.hs:	     | Root  !Int !Int
+EtParser.hs:				(ty,rest''') <- readString $! trim rest''
+EtParser.hs:				let (ty,rest''') = readStringFast $! trim rest''
+Binary file EtParserNoFields.hi matches
+EtParserNoFields.hs:data Record =  Alloc !Int !Int L.ByteString !Int
+EtParserNoFields.hs:	     | Update !Int !Int !Int !Int 
+EtParserNoFields.hs:	     | Death !Int
+EtParserNoFields.hs:	     | Entry !Int !Int !Int
+EtParserNoFields.hs:	     | Exit  !Int !Int !Int
+EtParserNoFields.hs:	     | Root  !Int !Int
+EtParserNoFields.hs:				(ty,rest''') <- readString $! trim rest''
+Binary file EtParserNoFields.o matches
+Binary file EtParser.o matches
+Binary file gcGenSim matches
+gcGenSim.hs:	 contents <- if(List.isSuffixOf ".gz" (args !! 0)) then
+gcGenSim.hs:		       fmap GZip.decompress $ L.readFile (args !! 0)
+gcGenSim.hs:			L.readFile (args !! 0)
+gcGenSim.hs:	 let m = simulate initMachine $! map (f.readRecord) $! L.lines contents
+gcGenSim.hs:	 putStrLn $   "Input trace:" ++ (args !! 0)
+gcGenSim.hs:	 putStrLn $! "Allocations : " ++ show (alloc_obj m) ++ " Marks: " ++ show (marks m) ++ " Promotions: " ++ show (promotions m) 
+gcReachSim.hs:	 contents <- if(List.isSuffixOf ".gz" (args !! 0)) then
+gcReachSim.hs:		       fmap GZip.decompress $ L.readFile (args !! 0)
+gcReachSim.hs:			L.readFile (args !! 0)
+gcReachSim.hs:	 --let !m = simulate initMachine $! map (f.readRecord) $! L.lines contents
+gcReachSim.hs:	 let !m = List.foldl' readRecordMachine initMachine $! L.lines contents
+gcReachSim.hs:	 let !test = uniqueChunkMemb (toList $ chunks m)
+gcReachSim.hs:				  error ("Object " ++ (show obj) ++ "appears in multiple chunks!")
+Binary file gcSimulator matches
+Binary file gcSimulator.hi matches
+gcSimulator.hs:push !method !thread !stacks =  M.insert thread ( (method,S.empty) Seq.<| (f (M.lookup thread stacks))) stacks
+gcSimulator.hs:				f (Just !frames) = frames
+gcSimulator.hs:pop !method !thread !stacks = M.update f  thread  stacks
+gcSimulator.hs:addRoot !r !thread !stacks =  M.update f  thread  stacks 
+gcSimulator.hs:			  nursery :: !S.IntSet
+gcSimulator.hs:			 , nursery_size :: !Int --Current size, in bytes, of the nursery
+gcSimulator.hs:			 , nursery_limit :: !Int --How big can teh nursery get before a collection?
+gcSimulator.hs:			 , heap_size :: !Int
+gcSimulator.hs:			 , heap_limit :: !Int
+gcSimulator.hs:			 , heap :: !G.Graph
+gcSimulator.hs:			 , roots :: !S.IntSet --These contain _ONLY_ the static variable roots
+gcSimulator.hs:			 , stacks:: !StackMap
+gcSimulator.hs:			 , alloc :: !Int --How much total allocation?
+gcSimulator.hs:simStep (m,!marks) (Alloc oid size ty tid) = if doCollection then
+gcSimulator.hs:						(!collectedMachine,!newMarks) = wholeHeapCollect m
+gcSimulator.hs:simStep (m,!marks) (Death oid) 		  = (m{nursery=nursery', heap=heap'} , marks)
+gcSimulator.hs:simStep (m,!marks) (Update old origin new tid) = (m{heap=heap'}, marks)
+gcSimulator.hs:					!heap' = G.insEdge origin new $! G.delEdge origin old (heap m)
+gcSimulator.hs:simStep (m,!marks) (Entry mid rid tid) = (m{stacks=stacks'},marks)
+gcSimulator.hs:simStep (m,!marks) (Exit mid rid tid) = (m{stacks=stacks'},marks)
+gcSimulator.hs:					!stacks' = pop mid tid (stacks m)
+gcSimulator.hs:simStep (m,!marks) (Root r t) = (m{stacks=addRoot r t (stacks m)} ,marks)
+gcSimulator.hs:--simStep (m,!marks) 	_		      = (m,marks)
+gcSimulator.hs:			!heap' = sweep markedSet (heap m)
+gcSimulator.hs:						   !black' = S.fold (\o m -> S.insert o m) black grey 
+gcSimulator.hs:						   !grey' = S.fold (S.union.neighbors) S.empty $ S.filter (not.isBlack) grey
+gcSimulator.hs:	contents <- L.readFile (args !! 0)
+gcSimulator.hs:	print $! simulate $! map (f.readRecord) $! L.lines  contents
+Binary file gcSimulator.o matches
+GenerationalGC.hs:				      --(!collectedMachine,!newMarks) = wholeHeapCollect ma
+GenerationalGC.hs:					!heap' = G.insEdge origin new $! G.delEdge origin old (heap m)
+GenerationalGC.hs:							MS.insert new $! MS.delete old  (roots m)
+GenerationalGC.hs:					!stacks' = pop mid tid (stacks m)
+Binary file Graph.hi matches
+Graph.hs:data IntList =  Cons {-# UNPACK #-}!Int !IntList
+Graph.hs:	       -- |Quin {-# UNPACK #-} !Int !Int !Int !Int !Int
+Graph.hs:	       -- |Quad {-# UNPACK #-} !Int !Int !Int !Int 
+Graph.hs:	       -- |Trip {-# UNPACK #-} !Int !Int !Int 
+Graph.hs:	       |Doub {-# UNPACK #-} !Int !Int
+Graph.hs:	       |Sing {-# UNPACK #-} !Int
+Graph.hs:                             !x = f v i 
+Graph.hs:del !i (Cons j js) = if i == j then
+Graph.hs:del !i (Doub a b)
+Graph.hs:del !i (Sing a) 
+Graph.hs:del !i Empty 	  = Empty
+Graph.hs:{-del !i q@(Quin a b c d e) 
+Graph.hs:insNode n  (Graph !m) =  Graph $! M.insert n Empty m
+Graph.hs:insEdge s d (Graph !m)  =  Graph $! M.insert s d_elist m
+Graph.hs:			  !d_elist  =  d `ins` elist
+Graph.hs:			  (Just !elist) = M.lookup s m
+Graph.hs:delEdge s d (Graph !m) =  Graph	$! M.insert s del_list  m
+Graph.hs:				!del_list = del d elist
+Graph.hs:				!elist = unpack $! M.lookup s m
+Graph.hs:neighbors n (Graph !m) 	= f (M.lookup n m)
+Graph.hs:delNode n (Graph !m) = Graph $! M.delete n m
+Graph.hs:hasNode n (Graph !m)  = M.member n m
+Graph.hs:nodes (Graph !m) = keysSet m
+Binary file Graph.o matches
+HarnessLanguage.hs:  show Neq = "!="
+HarnessLanguage.hs:  show Not = "!"
+lifeQuartie.hs:	 contents <- L.readFile (args !! 0)
+lifeQuartie.hs:	 let !lifeTimes = if List.isSuffixOf ".sorted" (args !! 0) then --If it is already sorted, we can save time
+lifeQuartie.hs:			      Seq.fromList $! map (fromJust.readSize) $ L.lines contents
+lifeQuartie.hs:			     Seq.unstableSort $ Seq.fromList $! map (fromJust.readSize) $ L.lines contents
+lifeQuartie.hs:	 let !res = map (\x -> (fromIntegral x)/(fromIntegral $ Seq.length lifeTimes)) $! numSurvivedUntil (Seq.length lifeTimes) [1*mb,2*mb,4*mb,100*mb] lifeTimes
+lifeQuartie.hs:	 putStrLn ("---survival results for" ++ (args !! 0) ++ "---")
+lifeQuartie.hs:	 putStrLn ("1 mb survival fraction: " ++ (show (res !! 0)))
+lifeQuartie.hs:	 putStrLn ("2 mb survival fraction: " ++ show (res !! 1))
+lifeQuartie.hs:	 putStrLn ("4 mb survival fraction: " ++ show (res !! 2))
+lifeQuartie.hs:	 putStrLn ("100 mb survival fraction: " ++ show (res !! 3))
+lifeTimeAnalyzer.hs:import Data.IntMap ((!))
+lifeTimeAnalyzer.hs:simStep (!m,!oid2type) (Alloc oid size ty _ ) = (m{objMap=objMap'},oid2type')
+lifeTimeAnalyzer.hs:simStep (!m,!oid2type) (Entry mid _ tid) = (m{time = (time m) + 1},oid2type)
+lifeTimeAnalyzer.hs:simStep (!m,!oid2type) (Exit mid _ tid)  = (m{time= (time m) +1},  oid2type)
+lifeTimeAnalyzer.hs:simStep (!m,!oid2type) (Death oid)       = (m{objMap=objMap'},     oid2type)
+lifeTimeAnalyzer.hs:         contents <- if(List.isSuffixOf ".gz" (args !! 0)) then
+lifeTimeAnalyzer.hs:                       fmap GZip.decompress $ L.readFile (args !! 0)
+lifeTimeAnalyzer.hs:                        L.readFile (args !! 0)
+lifeTimeAnalyzer.hs:	 let (m,!oid2type) = simulate $! List.map (f.readRecord) $! L.lines contents
+lifeTimeAnalyzer.hs:				   lifeTime oid = (fromJust $ (deathTime (omap ! oid))) - ( allocTime  (omap ! oid))
+lifeTimeAnalyzer.hs:			 f !oid !ty !m = Map.alter (g oid) ty m 
+lifeTimeAnalyzer.hs:			 g  !oid Nothing =  Just $ Seq.singleton oid
+lifeTimeAnalyzer.hs:			 g  !oid (Just seq) = Just (oid <| seq)--}
+lifeTimeAnalyzer.hs:			 f !m (oid,ty) = Map.alter g ty m
+Binary file Machine.hi matches
+Binary file Machine.o matches
+NurseryGC.hs:						--(!collectedMachine,!newMarks) = wholeHeapCollect ma
+NurseryGC.hs:					!heap' = G.insEdge origin new $! G.delEdge origin old (heap m)
+NurseryGC.hs:							MS.insert new $! MS.delete old  (roots m)
+NurseryGC.hs:					!stacks' = pop mid tid (stacks m)
+NurseryGC.hs:			  !black'  = S.fold (\o m -> S.insert o m) black grey
+Binary file ObjectModel.hi matches
+ObjectModel.hs:				 size	    :: {-# UNPACK #-} !Int
+ObjectModel.hs:               | ID {-#UNPACK #-} !Int
+Binary file ObjectModel.o matches
+ObjectToTypeMap.hs:import Data.Map ((!))
+ObjectToTypeMap.hs:			    obj2tid :: !(M.IntMap ObjectID)
+ObjectToTypeMap.hs:			  , tid2type :: !(M.IntMap L.ByteString)
+ObjectToTypeMap.hs:			  , type2tid :: !(Map.Map L.ByteString ObjectID)
+ObjectToTypeMap.hs:			  , last_tid :: !Int
+ObjectToTypeMap.hs:insert  oid ty !o2t =  if ty `Map.member` (type2tid o2t) then
+ObjectToTypeMap.hs:			  obj2tid' = M.insert oid ((type2tid o2t) ! ty ) (obj2tid o2t)
+ObjectToTypeMap.hs:lookup oid (ObjectToTypeMap !o2tid !tid2ty _ _)  = do
+ObjectToTypeMap.hs:toList !o2t =  List.foldl' (\l oid -> (oid, fromJust $ ObjectToTypeMap.lookup oid o2t):l) [] $  M.keys (obj2tid o2t)
+plot_grs.sh:#!/bin/bash
+pointerStabilityGraph2.hs:			  graph :: !(G.Gr Int Int)
+pointerStabilityGraph2.hs:			, stableFields :: !S.IntSet 
+pointerStabilityGraph2.hs:	fields <- L.readFile (args !! 0)
+pointerStabilityGraph2.hs:	recs <- L.readFile (args !! 1)
+pointerStabilityGraph2.hs:	let stabFieldSet = foldl (\fs f-> S.insert f fs) S.empty  $! map (fst.fromJust) $! filter isJust $! map L.readInt $!  L.lines fields
+pointerStabilityGraph2.hs:	print $! simulate stabFieldSet $! map (fst.fromJust.readRecord) $! L.lines recs 	
+pointerStabilityGraph.hs:                          	                                           Just $! c+1
+pointerStabilityGraph.hs:							  		Just $! M.update incCount new (M.update decCount old m)
+pointerStabilityGraph.hs:							  		Just $! M.insert new 1 (M.update decCount old m)
+pointerStabilityGraph.hs:setOfDests m = List.foldl' S.union S.empty  $! List.map ( \(_,m')-> toDestSet $ assocs m' )    (assocs m) 
+pointerStabilityGraph.hs:			toDestSet is = S.fromList $! List.map (\(d, _ ) -> d) is
+pointerStabilityGraph.hs:convert m  = foldl' (\ !g !k-> insEdges  g k (fromJust $ M.lookup k m)  ) ng (M.keys m)
+pointerStabilityGraph.hs:	       !ng_keys = foldl'  (\ !g !n-> G.insNode (n,n) g) G.empty (M.keys m)
+pointerStabilityGraph.hs:	       !ng      = S.fold (\ !n !g -> insNodeIfNeeded n g) ng_keys (setOfDests m) 
+pointerStabilityGraph.hs:	       insEdges !g !origin !dests = M.foldWithKey (\dest count graph -> insDest origin graph dest count) g dests
+pointerStabilityGraph.hs:	       insDest  !origin !g !d !count = if count /= 0 then
+pointerStabilityGraph.hs:	contents <- L.readFile (args !! 0)
+pointerStabilityGraph.hs:	print $! GQ.noComponents $! convert $! simulate $! List.map (fst.fromJust.readRecord) $! L.lines contents
+ReachGC.hs:import Data.IntMap ((!))
+ReachGC.hs:				     nursery :: !S.IntSet
+ReachGC.hs:				   , nursery_size :: !Int
+ReachGC.hs:				   , nursery_limit:: !Int
+ReachGC.hs:				   , rem_set :: !MS.IntMultiSet
+ReachGC.hs:				   , rem_set_origins :: !MS.IntMultiSet
+ReachGC.hs:				   , heap_size :: !Int
+ReachGC.hs:				   , heap_limit :: !Int
+ReachGC.hs:				   , heap :: !G.Graph
+ReachGC.hs:				   , roots :: !MS.IntMultiSet  {-- Only the static roots --}
+ReachGC.hs:			           , stacks :: !StackMap
+ReachGC.hs:				   , alloc_bytes :: !Int {--Number of bytes allocated --}
+ReachGC.hs:				   , alloc_obj :: !Int {--Number of objects allocated --}
+ReachGC.hs:				   , promotions :: !Int {-- How many objects get promoted? --}
+ReachGC.hs:				   , chunks :: !(Seq.Seq S.IntSet)
+ReachGC.hs:				   , marks :: !Int --Just a count of marking done by the GC
+ReachGC.hs:				   , nursery_collections :: !Int
+ReachGC.hs:				   , whole_heap_collections :: !Int
+ReachGC.hs:				   , large :: !Int --Objects bigger than this size are considered "large"
+ReachGC.hs:				   , large_objects :: !S.IntSet	
+ReachGC.hs:				   , time :: !Int --What time is it now?
+ReachGC.hs:				   , objMap :: !(M.IntMap Size)
+ReachGC.hs:				   , origin2chunkIndex :: !(M.IntMap Int)
+ReachGC.hs:heapSize m = S.foldl' (\sum n-> ((objMap m) ! n) + sum)  0 (nodes $! heap m)
+ReachGC.hs:	!mergedChunk = (chunks m) `seq` ((chunks m) `index` i) `S.union` ((chunks m) `index` j)
+ReachGC.hs:	o2c' = M.map f $! (origin2chunkIndex m)
+ReachGC.hs:        chunks' = mergedChunk <| (deleteAtIndex (S.fromList [i, j]) $! (chunks m))
+ReachGC.hs:				     		   --Should never get here!
+ReachGC.hs:						       let !recCall = (delSub is (cur+1) (Seq.drop 1 as)) in
+ReachGC.hs:	   chunkIndexTest = all (\r -> r `S.member` ((chunks m) `index` ( (origin2chunkIndex m) ! r))) $  (M.keys $  origin2chunkIndex m)
+ReachGC.hs:  allocate  !oid !size unused1 unused2 !m = if size > large m then
+ReachGC.hs:	    objMap' = M.insert oid size $! objMap m
+ReachGC.hs:	  nursery' = S.insert oid $!  (nursery m)
+ReachGC.hs:		       purgeChunks (\n->G.hasNode n $!  heap wCollectedMachine)  $! chunks wCollectedMachine
+ReachGC.hs:	  objMap' = M.insert oid size $! objMap m
+ReachGC.hs:  death !oid !m = m
+ReachGC.hs:  update !old !origin !new _ _ !m = {-# SCC "update" #-}  
+ReachGC.hs:					   m' =  updateChunks $! updateO2C $! updateRemSet $! updateRoots $! updateHeap $! updateNodes m  --m'{heap=heap', rem_set=rem_set'', rem_set_origins=rem_set_origins'',roots=roots', origin2chunkIndex=origin2chunkIndex'}
+ReachGC.hs:					  updateHeap !m = {-# SCC "updateHeap" #-} m{heap=heap'}
+ReachGC.hs:							   !heap' = updateEdges m --G.insEdge origin new $! G.delEdge origin old (heap m')
+ReachGC.hs:					  updateRoots !m = {-# SCC "updateRoots" #-}m{roots=roots'}
+ReachGC.hs:							    !roots'
+ReachGC.hs:								| origin == 0 && new /= 0 =  MS.insert new $! MS.delete old $! (roots m)
+ReachGC.hs:							        | origin == 0 && new == 0 =  MS.delete old $! (roots m)									       
+ReachGC.hs:					  updateRemSet !m = {-# SCC "updateRemSet" #-} m{rem_set=rem_set'',rem_set_origins=rem_set_origins''}
+ReachGC.hs:							     !rem_set' = if (not $ origin `S.member` nursery m) && new `S.member` nursery m then
+ReachGC.hs:									  MS.insert new $! (rem_set m)
+ReachGC.hs:							     !rem_set'' = if (not $ origin `S.member` nursery m) && old `S.member` nursery m then
+ReachGC.hs:							     !rem_set_origins' = if ( (origin /= 0) &&( not $ origin `S.member` nursery m )) && (new `S.member` nursery m ) then
+ReachGC.hs:										  MS.insert origin $!  (rem_set_origins m)	
+ReachGC.hs:							     !rem_set_origins'' = if ( (origin /= 0) && ( not $ origin `S.member` nursery m ) ) && old `S.member` nursery m  then
+ReachGC.hs:					  updateO2C !m = {-# SCC "updateO2C" #-} m{origin2chunkIndex=origin2chunkIndex'}
+ReachGC.hs:							  !origin2chunkIndex' = if ( (origin /= 0) 
+ReachGC.hs:										   M.insert origin index $! (origin2chunkIndex m)
+ReachGC.hs:					  updateChunks !m = {-# SCC "updateChunks" #-}
+ReachGC.hs:								   fromMaybe f $ Seq.findIndexL (\c ->o `S.member` c) $! (chunks m)
+ReachGC.hs:						  | (old /= 0 && new /= 0) = G.insEdge origin new $! G.delEdge origin old (heap m)
+ReachGC.hs:  methodEntry  !mid _ !tid !m = {-# SCC "entry" #-} m{stacks=stacks', time=(time m + 1)}
+ReachGC.hs:  methodExit  !mid _ !tid !m = {-# SCC "exit" #-} m{stacks=stacks', time = (time m + 1)}
+ReachGC.hs:		              !stacks' = pop mid tid (stacks m)
+ReachGC.hs:  root !r !t !m = {-# SCC "root" #-} m{stacks=GS.addRoot r t $! (stacks m)} 
+ReachGC.hs:reachCollect !m =
+ReachGC.hs:       sweepedHeap = S.foldl'  (flip G.delNode) (heap m) $ S.filter (\x -> not $  S.member x marked) $! nursery m
+ReachGC.hs:       sweepedObjMap = S.foldl' (flip M.delete) (objMap m) $ S.filter (\x -> not $  S.member x marked) $! nursery m
+ReachGC.hs:       (!root2BabiesMap,!orphans) = {-# SCC "root2BabiesOrphans" #-}S.foldl' evictBabies (M.empty,(nursery m)) parents
+ReachGC.hs:				      parents = (S.filter ( \n -> G.hasNode n  sweepedHeap) $ MS.toSet $! rem_set_origins m)
+ReachGC.hs:       size_of_deleted = S.foldl' (\sum o ->  ((objMap m) ! o) + sum ) 0 $ S.filter (\n -> not $ S.member n marked) (nursery m)
+ReachGC.hs:			      ci r = (origin2chunkIndex m) ! r
+ReachGC.hs:			      babies r = root2BabiesMap ! r
+ReachGC.hs:       !liveOrphans =  S.filter (\n-> n `S.member` marked) orphans
+ReachGC.hs:       !chunks' = if not $ S.null liveOrphans then --Don't append liveOrphans if it is empty
+ReachGC.hs:       followRoot !r = S.delete r $ mark S.empty (S.singleton r) 
+ReachGC.hs:	  !black'  = S.foldl'  (flip S.insert) black grey
+Simulate.hs:simStep !m (Alloc oid size ty thread)           = allocate oid size ty thread m
+Simulate.hs:simStep !m (Death oid)		                = death oid m
+Simulate.hs:simStep !m (Update old origin new thread field) = update old origin new thread field m
+Simulate.hs:simStep !m (Entry mid refid thread)	        = methodEntry mid refid thread m
+Simulate.hs:simStep !m (Exit mid refid thread)              = methodExit mid refid thread m
+Simulate.hs:simStep !m (Root rid thread)		        = root rid thread m
+Binary file SmallIntSet.hi matches
+SmallIntSet.hs:		   | SingSet {-# UNPACK #-} !Int
+SmallIntSet.hs:		   | DoubSet {-# UNPACK #-} !Int {-# UNPACK #-} !Int
+SmallIntSet.hs:		   | TripSet {-# UNPACK #-} !Int {-# UNPACK #-} !Int {-# UNPACK #-} !Int
+SmallIntSet.hs:		   | Full !S.IntSet
+Binary file SmallIntSet.o matches
+stableFields.hs:			   objMap:: !(M.IntMap (M.IntMap Bool))
+stableFields.hs:			 , metaUnstable :: !S.IntSet
+stableFields.hs:			 , metaStable ::   !S.IntSet
+stableFields.hs:			 , numFields :: !Int
+stableFields.hs:			 , stabFields:: !Int
+stableFields.hs:			 , numAdultFields:: !Int
+stableFields.hs:			 , stabAdultFields :: !Int
+stableFields.hs:			 , allocMap:: !(M.IntMap Int)
+stableFields.hs:			 , time:: !Int
+stableFields.hs:		!objMap' = if M.member origin (objMap mach) then
+stableFields.hs:				let !m = Maybe.fromJust $ M.lookup origin (objMap mach)
+stableFields.hs:			   	    !m' = if M.member field (objMap mach) then
+stableFields.hs:				let !m = M.fromList [(field, True)]
+stableFields.hs:		{--!metaFieldMap' = if M.member field (metaFieldMap mach) then
+stableFields.hs:		!objMap'     = M.delete oid (objMap mach)
+stableFields.hs:		!allocMap'   = M.delete oid (allocMap mach)
+stableFields.hs:		!numFields'  = (numFields mach) + fieldsInObj
+stableFields.hs:		!stabFields' = (stabFields mach) +  stabFieldsInObj
+stableFields.hs:		!numAdultFields' = if isAdult then
+stableFields.hs:		!stabAdultFields' = if isAdult then
+stableFields.hs:		!isAdult  = if oid `M.member` allocMap mach then
+stableFields.hs:		!endMach = List.foldl' simStep initMachine rs
+stableFields.hs:		!endStabCount  = M.fold  (+)   0  $! M.map (\x-> countStabFields (Just x)) (objMap endMach)
+stableFields.hs:		!endFieldCount = M.fold  (+)   0  $! M.map (\x-> countFields (Just x)) (objMap endMach)
+stableFields.hs:	contents <- L.readFile (args !! 0)
+stableFields.hs:	let endMach =  simulate $! map (f.readRecord) $! L.lines  contents
+Binary file WholeHeapGC.hi matches
+WholeHeapGC.hs:push !method !thread !stacks =  M.insert thread ( (method,SmallS.empty) Seq.<| (f (M.lookup thread stacks))) stacks
+WholeHeapGC.hs:				f (Just !frames) = frames
+WholeHeapGC.hs:pop !method !thread !stacks = M.update f  thread  stacks
+WholeHeapGC.hs:						Just $!  Seq.drop 1 $! Seq.dropWhileL (\(m,_) -> m /= method) frames
+WholeHeapGC.hs:addRoot !r !thread !stacks =  M.update f  thread  stacks 
+WholeHeapGC.hs:					| otherwise         = let (!mid, !roots)  = frames `Seq.index` 0 
+WholeHeapGC.hs:	        						  !beheadedSeq   = Seq.drop 1 frames  in
+WholeHeapGC.hs:		     						    Just $! (mid, SmallS.insert r roots) Seq.<| beheadedSeq
+WholeHeapGC.hs:wholeHeapCollect m =  trace "Whole heap collection " $ replaceHeap heap' $! incMarks  (S.size markedSet) m --m{heap=heap',marks= marks m + S.size markedSet} 
+WholeHeapGC.hs:			!heap' = sweep markedSet $! (heap m)
+WholeHeapGC.hs:						   !black' = S.foldl' (\m o -> S.insert o m) black grey 
+WholeHeapGC.hs:						   !grey' = S.foldl'  (\s i -> s `S.union` neighbors i) S.empty $ S.filter (not.isBlack) grey
+WholeHeapGC.hs:			markedSet = mark S.empty (getRoots m) $! (heap m)
+WholeHeapGC.hs:getRoots m =  staticRoots `S.union` M.fold (S.union) S.empty (M.map stackRoots $! (stacks m) )
+WholeHeapGC.hs:		staticRoots = MS.toSet $! roots m
+WholeHeapGC.hs:	contents <- L.readFile (args !! 0)
+WholeHeapGC.hs:	print $! simulate $! map (f.readRecord) $! L.lines  contents
+Binary file WholeHeapGC.o matches
+WholeHeapMachine.hs:				     heap_size :: !Int
+WholeHeapMachine.hs:				   , heap_limit :: !Int
+WholeHeapMachine.hs:				   , heap :: !G.Graph
+WholeHeapMachine.hs:				   , roots :: !MS.IntMultiSet  {-- Only the static roots --}
+WholeHeapMachine.hs:			           , stacks :: !StackMap
+WholeHeapMachine.hs:				   , alloc_bytes :: !Int {--Number of bytes allocated --}
+WholeHeapMachine.hs:				   , alloc_obj :: !Int {--Number of objects allocated --}
+WholeHeapMachine.hs:				   , marks :: !Int --Just a count of marking done by the GC
+WholeHeapMachine.hs:				   , whole_heap_collections :: !Int
+WholeHeapMachine.hs:				   --, large :: !Int --Objects bigger than this size are considered "large"
+WholeHeapMachine.hs:				   --, large_objects :: !S.IntSet	
+WholeHeapMachine.hs:				   , time :: !Int --What time is it now?
+WholeHeapMachine.hs:  allocate oid size _ _ !m = if doCollection then
+WholeHeapMachine.hs:						death !oid !m 		  = m{heap=heap'}
+WholeHeapMachine.hs:  update !old !origin !new _ _ !m = m{heap=heap'}
+WholeHeapMachine.hs:					!heap' = G.insEdge origin new $! G.delEdge origin old (heap m)
+WholeHeapMachine.hs:  methodEntry !mid _ !tid !m = m{stacks=stacks'}
+WholeHeapMachine.hs:  methodExit  !mid _ !tid !m = m{stacks=stacks'}
+WholeHeapMachine.hs:					!stacks' = pop mid tid (stacks m)
+WholeHeapMachine.hs:  root !r !t              !m  = m{stacks=addRoot r t (stacks m)}

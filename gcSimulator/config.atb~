@@ -1,0 +1,5 @@
+projectDirectory = "bintree"
+budgetTime = 0.1h
+coverage = "Main.hs"
+targetMetric = "peakAlloc"
+inputArg = "5"

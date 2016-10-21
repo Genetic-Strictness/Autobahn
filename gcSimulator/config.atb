@@ -1,0 +1,5 @@
+projectDirectory = "."
+budgetTime = 6h
+coverage = "Main.hs"
+targetMetric = "peakAlloc"
+inputArg = "5"

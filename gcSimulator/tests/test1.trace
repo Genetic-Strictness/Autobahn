@@ -1,0 +1,10 @@
+A 1  100000  LTestObject; 1
+A 2  100000  LTestObject; 1
+A 3  100000  LTestObject; 1
+A 4  100000  LTestObject; 1
+U 0 1 2 1
+M 1 1 1
+R 1 1
+U 0 2 2 1
+U 0 2 3 1
+A 5  1 LTestObject; 1
