@@ -36,7 +36,7 @@ checkBaseProgram baseTime baseMetric = if baseTime == -1
                                                  "Autobahn cannot optimize."
                                             else putStr $ "Base measurement is: " ++ (show baseTime)
 
-fitness :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO Time
+fitness :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO (Time, Int)
 fitness cfg reps files bangVecs = do
   -- Read original
     let absPaths = map (\x -> projectDir cfg ++ "/" ++ x) files
@@ -49,7 +49,7 @@ fitness cfg reps files bangVecs = do
     !(_, newMetricStat) <- benchmark cfg reps
   -- Recover original
     !_ <- sequence $ map (uncurry writeFile) $ zip absPaths progs
-    return newMetricStat
+    return (newMetricStat, 1)
     
 main :: IO () 
 main = do 
@@ -114,7 +114,7 @@ gmain autobahnCfg = do
     newFps <- createResultDirForAll projDir absPaths bangs
     let f = map fst es'
         scores = map getScore f
-    genResultPage projDir scores newFps projDir Nothing cfg 0.0 1
+    genResultPage projDir (map fst scores) newFps projDir Nothing cfg 0.0 1
 
     where
        getScore s = case s of

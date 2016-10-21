@@ -19,7 +19,7 @@ import Config
 
 type BangVec = BV 
 type Time = Double
-type Score = Double
+type Score = (Double, Int)
 type FitnessRun = [BangVec] -> IO Score
 
 -- TODO: implement in case we ever need to parse Bit (Bang) Vectors
@@ -69,10 +69,10 @@ instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
   -- Improvement on base time
   -- NOTE: lower is better
   score (baseTime, fitRun) bangVecs = do 
-    newTime <- fitRun bangVecs
+    (newTime, nBangs) <- fitRun bangVecs
     let score = (newTime / baseTime)
     putStrLn $ "bits: " ++ (concat $ (map (printBits . toBits) bangVecs))
-    return $! Just score
+    return $! Just (score, nBangs)
 
   showGeneration _ (_,archive) = "best: " ++ (show fit)
     where
