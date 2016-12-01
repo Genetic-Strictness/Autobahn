@@ -1,0 +1,14 @@
+/h/ywang30/Genesis/bintree/dist/build/bintree/bintree +RTS -N8 -K128M -H -T -ttiming.temp --machine-readable 
+ [("bytes allocated", "29483380200")
+ ,("num_GCs", "20908")
+ ,("average_bytes_used", "8938011")
+ ,("max_bytes_used", "272092216")
+ ,("num_byte_usage_samples", "1237")
+ ,("peak_megabytes_allocated", "601")
+ ,("init_cpu_seconds", "0.014")
+ ,("init_wall_seconds", "0.008")
+ ,("mutator_cpu_seconds", "111.231")
+ ,("mutator_wall_seconds", "26.023")
+ ,("GC_cpu_seconds", "324.309")
+ ,("GC_wall_seconds", "40.731")
+ ]
