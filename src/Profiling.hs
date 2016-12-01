@@ -30,7 +30,7 @@ statsFromMetric GC      stats = let Just gcs = lookup "GC_cpu_seconds" stats
                                 in read gcs
 
 benchmark :: Cfg -> Int64 -> IO (Double, Double)
-benchmark (cfg @ Cfg
+benchmark !(cfg @ Cfg
   { projectDir = projDir
   , timeBudget = timeLimit
   , fitnessMetric = metric
@@ -44,7 +44,8 @@ benchmark (cfg @ Cfg
         projDir = projectDir cfg
         mainFile = executable cfg -- TODO: more of coverage
         runProj = "timeout " ++ (show . round $ timeLimit) ++ "s " ++ projDir ++ "/dist/build/" 
-                         ++ takeBaseName mainFile ++ "/" ++ takeBaseName mainFile
+--                         ++ takeBaseName mainFile ++ "/" ++ takeBaseName mainFile
+                         ++ "bintree" ++ "/" ++ "bintree"
                          ++ " " ++ inputArgs cfg
                          ++ " -q +RTS -ttiming.temp --machine-readable"
                          ++ " > /dev/null"

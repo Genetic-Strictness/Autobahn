@@ -2,10 +2,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module GeneAlg where
+module GeneAlg2 where
 
-import System.Random (mkStdGen, random, randoms)
-import GA (Entity(..), GAConfig(..), evolveVerbose, randomSearch)
+import System.Random (mkStdGen, random, randoms, StdGen)
+import GA (Entity(..), GAConfig(..), evolve, evolveVerbose, randomSearch, Archive)
 import Data.BitVector (BV, fromBits, toBits, size, ones)
 import Data.Bits.Bitwise (fromListLE, fromListBE, toListBE)
 import Data.Bits
@@ -17,21 +17,18 @@ import Config
 -- GA TYPE CLASS IMPLEMENTATION
 --
 
-type BangVec = BV 
-type Time = Double
-type Score = (Double, Int)
-type FitnessRun = [BangVec] -> IO Score
+ev = evolve :: StdGen -> GAConfig -> [BV] -> (Double, ([BV] -> IO (Double, Int))) -> IO (Archive [BV] Int)
 
 -- TODO: implement in case we ever need to parse Bit (Bang) Vectors
 readsBV = undefined
 
-instance Read BangVec where -- TODO is this ok?
+instance Read BV where -- TODO is this ok?
   readsPrec _ s = readsBV
 
-printBits :: [Bool] -> String
-printBits = concatMap (\b -> if b then "1" else "0")
+printBits' :: [Bool] -> String
+printBits' = concatMap (\b -> if b then "1" else "0")
 
-instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
+instance Entity [BV] Int (Double, ([BV] -> IO (Double, Int))) [BV] IO where
  
   -- Generate a random bang vector
   -- Invariant: pool is the vector with all bangs on
@@ -63,16 +60,16 @@ instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
                                   len = size e
                                   g = mkStdGen seed
                                   fs = take len $ randoms g
-                                  bs = map (< p) fs
-                                  e' = e `xor` fromBits bs
+                                  bs = map (< (1 - p)) fs
+                                  e' = e .&. fromBits bs
 
   -- Improvement on base time
   -- NOTE: lower is better
   score (baseTime, fitRun) bangVecs = do 
     (newTime, nBangs) <- fitRun bangVecs
     let score = (newTime / baseTime)
-    putStrLn $ "bits: " ++ (concat $ (map (printBits . toBits) bangVecs)) ++ ", " ++ (show nBangs)
-    return $! Just (score, nBangs)
+    putStrLn $ "bits: " ++ (concat $ (map (printBits' . toBits) bangVecs)) ++ ", " ++ (show nBangs) ++ ", " ++ (show score)
+    return $! Just (if score <= 1.05 then nBangs else (0 - 1))
 
   showGeneration _ (_,archive) = "best: " ++ (show fit)
     where

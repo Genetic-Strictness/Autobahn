@@ -4,6 +4,7 @@ import Types
 import Rewrite
 import Profiling
 import GeneAlg
+import qualified GeneAlg2 as G2
 import Config
 import Result
 ------
@@ -20,6 +21,8 @@ import Control.DeepSeq
 import System.FilePath
 
 import Debug.Trace
+import System.Random (StdGen)
+import Data.Maybe (isJust, fromJust)
 
 reps :: Int64
 reps = runs
@@ -49,7 +52,24 @@ fitness cfg reps files bangVecs = do
     !(_, newMetricStat) <- benchmark cfg reps
   -- Recover original
     !_ <- sequence $ map (uncurry writeFile) $ zip absPaths progs
-    return (newMetricStat, 1)
+    let n_ones = length . (filter (\x -> x)) . B.toBits $ head bangVecs
+    return (newMetricStat, n_ones)
+
+fitnessNBangs :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO Int
+fitnessNBangs cfg reps files bangVecs = do
+  -- Read original
+    let absPaths = map (\x -> projectDir cfg ++ "/" ++ x) files
+    !progs  <- sequence $ map readFile absPaths
+  -- Rewrite from gene
+    !progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits bangVecs) 
+    rnf progs `seq` sequence $ map (uncurry writeFile) $ zip absPaths progs'
+  -- Benchmark new
+    -- buildProj projDir
+    !(_, newMetricStat) <- benchmark cfg reps
+  -- Recover original
+    !_ <- sequence $ map (uncurry writeFile) $ zip absPaths progs
+    let n_ones = length . (filter (\x -> x)) . B.toBits $ head bangVecs
+    return (if newMetricStat < 0 then 1000 else n_ones)
     
 main :: IO () 
 main = do 
@@ -88,16 +108,26 @@ gmain autobahnCfg = do
     let !vecPool = rnf progs `seq` map B.fromBits bs
 
   -- Do the evolution!
-    es <- evolveVerbose g cfg vecPool (baseMetric,
+    let ev = evolve :: StdGen -> GAConfig -> [BangVec] -> (Time, FitnessRun) -> IO (Archive [BangVec] Score)
+    es <- ev g cfg vecPool (baseMetric,
                                        fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
     let e = snd $ head es :: [BangVec]
     progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits e)
+
+    let bestMetric = fst $ fromJust $ fst $ head $ filter (\x -> isJust $ fst x) es
+    newEs <- G2.ev g cfg vecPool (bestMetric,
+                                   fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
+    let e2 = snd $ head newEs :: [BangVec]
+
 
   -- Write the original files back to disk
     sequence $ map (uncurry writeFile) $ zip absPaths progs
 
   -- Write result
     putStrLn $ "best entity (GA): " ++ (unlines $ (map (printBits . B.toBits) e))
+
+    putStrLn $ "best entity (GA) - r2: " ++ (unlines $ (map (printBits . B.toBits) e2))
+    
     let newPath = projDir ++ "/" ++ "autobahn-survivor"
     code <- system $ "mkdir -p " ++ newPath
     
@@ -116,7 +146,10 @@ gmain autobahnCfg = do
         scores = map getScore f
     genResultPage projDir (map fst scores) newFps projDir Nothing cfg 0.0 1
 
+
+
     where
        getScore s = case s of
                         Nothing -> error "filter should have removed all Nothing"
                         Just n -> n
+

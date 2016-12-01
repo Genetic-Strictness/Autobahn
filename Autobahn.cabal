@@ -50,7 +50,7 @@ executable Autobahn
   -- LANGUAGE extensions used by modules in this package.
   other-extensions:    BangPatterns, FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances
  
-  other-modules: Config, GeneAlg, Profiling, Result, Rewrite, Types
+  other-modules: Config, GeneAlg, GeneAlg2, Profiling, Result, Rewrite, Types
 
   -- Other library packages from which modules are imported.
 
