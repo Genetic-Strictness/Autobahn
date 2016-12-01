@@ -1,5 +1,4 @@
 projectDirectory = "."
 budgetTime = 6h
-coverage = "Main.hs"
+coverage = "gcSimulator.hs"
 targetMetric = "peakAlloc"
-inputArg = "5"
