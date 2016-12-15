@@ -60,16 +60,16 @@ instance Entity [BV] Int (Double, ([BV] -> IO (Double, Int))) [BV] IO where
                                   len = size e
                                   g = mkStdGen seed
                                   fs = take len $ randoms g
-                                  bs = map (< (1 - p)) fs
-                                  e' = e .&. fromBits bs
+                                  bs = map (< p) fs
+                                  e' = e `xor` fromBits bs
 
   -- Improvement on base time
   -- NOTE: lower is better
   score (baseTime, fitRun) bangVecs = do 
     (newTime, nBangs) <- fitRun bangVecs
-    let score = (newTime / baseTime)
-    putStrLn $ "bits: " ++ (concat $ (map (printBits' . toBits) bangVecs)) ++ ", " ++ (show nBangs) ++ ", " ++ (show score)
-    return $! Just (if score <= 1.05 then nBangs else (0 - 1))
+    let score = if newTime >= 0 then (newTime / baseTime) else 2
+    putStrLn $ "bits: " ++ (concat $ (map (printBits' . toBits) bangVecs)) ++ ", " ++ (show nBangs) ++ ", " ++ (show score) ++ ", " ++ (show baseTime)
+    return $! Just (if (score >= 0 && score <= 1.05) then nBangs else (1000))
 
   showGeneration _ (_,archive) = "best: " ++ (show fit)
     where

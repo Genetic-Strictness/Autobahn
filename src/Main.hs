@@ -31,7 +31,7 @@ cfgFile :: FilePath
 cfgFile = "config.atb"
 
 checkBaseProgram :: Double -> Double -> IO ()
-checkBaseProgram baseTime baseMetric = if baseTime == -1
+checkBaseProgram baseTime baseMetric = if baseTime < 0
                                        then error $ "Base program ran longer than expected. " ++
                                                   "We suggest a larger time budget."
                                        else if baseMetric <= 0
@@ -74,14 +74,37 @@ fitnessNBangs cfg reps files bangVecs = do
 main :: IO () 
 main = do 
   hSetBuffering stdout LineBuffering
-  putStrLn "Configure optimization..."
-  cfgExist <- doesFileExist cfgFile
-  cfg <- if cfgExist then readCfg cfgFile else cliCfg
+  args <- getArgs
+  cfg <- if null args then gatherCfg else manufactureCfg args
   putStrLn "Setting up optimization process..."
   putStrLn "Starting optimization process..."
   gmain cfg
   putStrLn $ "Optimization finished, please inspect and select candidate changes "
-        ++ "(found in AutobahnResults under project root)"
+   ++ "(found in AutobahnResults under project root)"
+      where
+          
+          gatherCfg = do 
+            putStrLn "Configure optimization..."
+            cfgExist <- doesFileExist cfgFile
+            cfg <- if cfgExist then readCfg cfgFile else cliCfg
+            return cfg
+          manufactureCfg args = do 
+                                     [a, b, c, d] <- getArgs
+                                     (baseTime, baseMetric) <- benchmark (Cfg {projectDir = a, timeBudget = 10000, fitnessMetric = RUNTIME, inputArgs = ""}) 1
+                                     print (baseTime, baseMetric)
+                                     return Cfg { projectDir = a
+                                                , pop = (read b)
+                                                , gen = (read c)
+                                                , arch = (read d)
+                                                , timeBudget = deriveFitnessTimeLimit baseTime
+                                                , fitnessMetric = RUNTIME
+                                                , coverage = ["Main.hs"]
+                                                , fitnessRuns = 1
+                                                , getBaseTime = baseTime
+                                                , getBaseMetric = baseMetric
+                                                , inputArgs = ""
+                                                }
+                                      
 
 gmain :: Cfg -> IO ()
 gmain autobahnCfg = do
@@ -98,6 +121,8 @@ gmain autobahnCfg = do
     putStrLn $ "arch: " ++ (show $ arch autobahnCfg)
     
     checkBaseProgram baseTime baseMetric
+    print baseTime
+    print baseMetric
     
     let absPaths = map (\x -> projDir ++ "/" ++ x) files
         fitnessTimeLimit = deriveFitnessTimeLimit baseTime
@@ -114,11 +139,15 @@ gmain autobahnCfg = do
     let e = snd $ head es :: [BangVec]
     progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits e)
 
-    let bestMetric = fst $ fromJust $ fst $ head $ filter (\x -> isJust $ fst x) es
-    newEs <- G2.ev g cfg vecPool (bestMetric,
+
+
+    let bestMetricPerc = fst $ fromJust $ fst $ head $ filter (\x -> isJust $ fst x) es
+
+    print bestMetricPerc
+
+    newEs <- G2.ev g cfg vecPool (bestMetricPerc * baseMetric,
                                    fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
     let e2 = snd $ head newEs :: [BangVec]
-
 
   -- Write the original files back to disk
     sequence $ map (uncurry writeFile) $ zip absPaths progs

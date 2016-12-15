@@ -70,8 +70,8 @@ instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
   -- NOTE: lower is better
   score (baseTime, fitRun) bangVecs = do 
     (newTime, nBangs) <- fitRun bangVecs
-    let score = (newTime / baseTime)
-    putStrLn $ "bits: " ++ (concat $ (map (printBits . toBits) bangVecs)) ++ ", " ++ (show nBangs)
+    let score = if newTime >= 0 then (newTime / baseTime) else 2
+    putStrLn $ "bits: " ++ (concat $ (map (printBits . toBits) bangVecs)) ++ ", " ++ (show score) ++ ", " ++ (show nBangs) ++ ", " ++ (show baseTime)
     return $! Just (score, nBangs)
 
   showGeneration _ (_,archive) = "best: " ++ (show fit)
