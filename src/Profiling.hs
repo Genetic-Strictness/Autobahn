@@ -21,13 +21,16 @@ pathToNoFib = "/data/dan"
 
 -- Build a cabal project. Project must be configured with cabal. `projDir` is in the current dir
 buildProj :: FilePath -> IO ExitCode
-buildProj projDir = system $ "cd " ++ projDir ++ "; cabal configure -v0; cabal build -v0"
-
 {-
--- For nofib makefile specificallybuildProj projDir = do 
+-- For cabal files
+buildProj projDir = system $ "cd " ++ projDir ++ "; cabal configure -v0; cabal build -v0"
+-}
+
+-- For nofib makefile specifically
+buildProj projDir = do 
   setCurrentDirectory projDir
   system "make clean -s; make boot -s &> /dev/null"
--}
+
 
 statsFromMetric :: MetricType -> [(String, String)] -> Double
 statsFromMetric RUNTIME stats = let Just muts = lookup "mutator_cpu_seconds" stats
@@ -58,11 +61,14 @@ benchmark !(cfg @ Cfg
                          ++ " -q +RTS -ttiming.temp --machine-readable"
                          ++ " > /dev/null"
 -}
-        runProj = "cd " ++ projDir ++ " && bash run.sh Main"
 {-
+-- For the zoo
+        runProj = "cd " ++ projDir ++ " && bash run.sh Main"
+-}
+
 -- For nofib makefile specifically
         runProj = "make -k mode=norm > nofib-gen 2>&1"
--}
+
         cleanProj = "rm -f timing.temp"
         executeProj = do 
           putStrLn $ "Running: " ++ runProj
@@ -71,7 +77,7 @@ benchmark !(cfg @ Cfg
           exitc <- system $ runProj 
           case exitc of
             ExitFailure _ -> return ((0 - 1), (0 - 1))
-{-
+
 -- Getting timing for nofib
             ExitSuccess   -> do
        	    		       system $ pathToNoFib ++ "/nofib/nofib-analyse/nofib-analyse --csv=Runtime nofib-gen nofib-gen > temp.prof" -- TODO heuristcs hardcoded
@@ -81,7 +87,8 @@ benchmark !(cfg @ Cfg
 			       let wcs = words $ map (\c -> if c == ',' then ' ' else c) fc
 			       -- system "rm nofib-gen; rm temp.prof"
 			       return ((read $ wcs !! 1), (read $ wcs !! 1))
--}
+{-
+-- Read for anything else
             ExitSuccess   -> do 
 
               !t <- readFile $ projDir ++ "/" ++ "timing.temp"
@@ -92,4 +99,4 @@ benchmark !(cfg @ Cfg
               case metric of
                 RUNTIME   -> return (runtime, runtime)
                 otherwise -> return (runtime, statsFromMetric metric stats)
-
+-}

@@ -12,10 +12,13 @@ import Data.Bits
 import Data.List
 import Control.DeepSeq
 import Config
-
+import Types
 --
 -- GA TYPE CLASS IMPLEMENTATION
 --
+
+evo :: Cfg -> IO [([BangVec], Double)]
+evo = undefined
 
 ev = evolve :: StdGen -> GAConfig -> [BV] -> (Double, ([BV] -> IO (Double, Int))) -> IO (Archive [BV] Int)
 
@@ -61,7 +64,7 @@ instance Entity [BV] Int (Double, ([BV] -> IO (Double, Int))) [BV] IO where
                                   g = mkStdGen seed
                                   fs = take len $ randoms g
                                   bs = map (< p) fs
-                                  e' = e `xor` fromBits bs
+                                  e' = e `xor` ((head pool) .&. fromBits bs)
 
   -- Improvement on base time
   -- NOTE: lower is better

@@ -1,5 +1,8 @@
 module Types
   ( MetricType(..)
+  , AlgorithmTy(..)
+  , BangVec(..)
+  , Time(..)
   , Cfg(..)
   , CfgAST(..)
   , defaultCfg
@@ -9,13 +12,19 @@ module Types
   , defaultCoverage
   ) where
 import Data.Int (Int64)
-
+import Data.BitVector (BV, fromBits, toBits, size, ones)
 data MetricType = ALLOC | GC | RUNTIME
 
 instance Show MetricType where
     show ALLOC = "alloc"
     show GC = "gc"
     show RUNTIME = "runtime"
+
+data AlgorithmTy = ORIGINAL | MINIMIZE
+
+instance Show AlgorithmTy where
+    show ORIGINAL = "original"
+    show MINIMIZE = "minimize"
 
 data Cfg = Cfg 
   { projectDir :: String
@@ -30,6 +39,7 @@ data Cfg = Cfg
   , arch :: Int
   , fitnessRuns :: Int64
   , inputArgs :: String
+  , algorithm :: AlgorithmTy
   } deriving Show
 
 data CfgAST = 
@@ -41,7 +51,11 @@ data CfgAST =
   | FITRUNS Integer
   | FILE [CfgAST]
   | EXE String
+  | ALG AlgorithmTy
   deriving Show
+
+type BangVec = BV 
+type Time = Double
 
 defaultProjDir :: FilePath
 defaultProjDir = "."
@@ -80,5 +94,7 @@ defaultCfg = Cfg
   , arch = 1
   , fitnessRuns = fromIntegral defaultFitRuns
   , inputArgs = defaultInput
+  , algorithm = ORIGINAL
   }
+
 

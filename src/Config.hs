@@ -181,7 +181,13 @@ convertToCfg ((FILE inner) : ast) cfg = convertToCfg ast $ convertToCfg inner cf
 convertToCfg ((INPUTS args) : ast) cfg = convertToCfg ast $ cfg { inputArgs = concat args }
 -- Ignore the other AST Nodes
 convertToCfg ((EXE exe) : ast) cfg = convertToCfg ast $ cfg { executable = exe }
+convertToCfg ((ALG alg) : ast) cfg = convertToCfg ast $ cfg { algorithm = alg }
 convertToCfg ((_) : ast)          cfg = convertToCfg ast cfg
+
+algToType :: String -> AlgorithmTy
+algToType "genetic" = ORIGINAL
+algToType "minimize" = MINIMIZE
+algToType _ = error "Unknown algorithm"
 
 calculateInputs :: Cfg -> IO Cfg
 calculateInputs cfg = do
@@ -307,6 +313,21 @@ exeRule = do
   exe <- stringLiteral
   return $ EXE exe
 
+algChoice :: PS.Parser CfgAST
+algChoice = do
+  reserved "algorithm"
+  reservedOp "="
+  alg <- parseAlg
+  return $ ALG alg
+
+parseAlg :: PS.Parser AlgorithmTy
+parseAlg = do {
+           x <- stringLiteral
+           ; case x of
+               "original" -> return $ ORIGINAL
+               "minimize" -> return $ MINIMIZE
+           }
+
 ---- Lexer ----
 
 lexer :: PT.TokenParser ()
@@ -314,7 +335,8 @@ lexer = PT.makeTokenParser $ haskellStyle
   { reservedOpNames = ["="]
     , reservedNames = ["budgetTime", "confidence", "coverage",
                        "targetMetric", "inputArg", "fitnessRuns",
-                       "projectDirectory", "executable"]
+                       "projectDirectory", "executable",
+                       "algorithm"]
   }
 
 whiteSpace = PT.whiteSpace  lexer
