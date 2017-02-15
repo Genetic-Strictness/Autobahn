@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE BangPatterns #-}
 
 module GeneAlg2 where
 
@@ -13,14 +14,43 @@ import Data.List
 import Control.DeepSeq
 import Config
 import Types
+import Utils
+import Rewrite (readBangs)
 --
 -- GA TYPE CLASS IMPLEMENTATION
 --
 
-evo :: Cfg -> IO [([BangVec], Double)]
-evo = undefined
+ev :: Cfg -> IO [([BangVec], Double)]
+ev autobahnCfg = do
+   let projDir = projectDir autobahnCfg
+       cfg = createGAConfig autobahnCfg
+       files = coverage autobahnCfg
+       fitnessReps = fitnessRuns autobahnCfg
+       baseTime = getBaseTime autobahnCfg
+       baseMetric = getBaseMetric autobahnCfg
 
-ev = evolve :: StdGen -> GAConfig -> [BV] -> (Double, ([BV] -> IO (Double, Int))) -> IO (Archive [BV] Int)
+   checkBaseProgram baseTime baseMetric
+
+   let absPaths = map (\x -> projDir ++ "/" ++ x) files
+       fitnessTimeLimit = deriveFitnessTimeLimit baseTime
+
+   progs <- sequence $ map readFile absPaths
+   bs <- sequence $ map readBangs absPaths
+
+   let !vecPool = rnf progs `seq` map fromBits bs
+
+   es <- evolve g cfg vecPool (baseMetric, fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files) :: IO (Archive [BangVec] Int)
+
+   return $ map foo es
+
+   where
+ 
+      foo (Just n_ones, bv) = (bv, fromIntegral $ n_ones)
+      foo (Nothing, bv) = (bv, fromIntegral $ 1000)
+
+
+
+--ev = evolve :: StdGen -> GAConfig -> [BV] -> (Double, ([BV] -> IO (Double, Int))) -> IO (Archive [BV] Int)
 
 -- TODO: implement in case we ever need to parse Bit (Bang) Vectors
 readsBV = undefined

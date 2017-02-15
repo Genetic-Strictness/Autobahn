@@ -31,7 +31,7 @@ performEvolve :: Cfg -> IO [([BangVec], Double)]
 performEvolve cfg = let alg = algorithm cfg in
                     case alg of
                       ORIGINAL -> G1.ev cfg
-                      MINIMIZE -> G2.evo cfg
+                      MINIMIZE -> G2.ev cfg
                       otherwise -> error $ "Unkown algorithm type: " ++ (show alg)
     
 main :: IO () 
