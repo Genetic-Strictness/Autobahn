@@ -1,41 +1,61 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE BangPatterns #-}
 
 module GeneAlg2 where
 
-import System.Random (mkStdGen, random, randoms, StdGen)
-import GA (Entity(..), GAConfig(..), evolve, evolveVerbose, randomSearch, Archive)
+import System.Random (mkStdGen, random, randoms, StdGen, randomR, getStdRandom)
+import GA (Entity(..), GAConfig(..), evolve, evolveVerbose, randomSearch, Archive(..))
 import Data.BitVector (BV, fromBits, toBits, size, ones)
 import Data.Bits.Bitwise (fromListLE, fromListBE, toListBE)
 import Data.Bits
 import Data.List
 import Control.DeepSeq
 import Config
+import Types
+import Utils
+import Rewrite (readBangs, editBangs)
+--import qualified GeneAlg as Orig
+
+import Data.Maybe (isJust, fromJust)
+import System.Environment
+import System.IO
+import System.Process
+import System.Directory hiding (executable)
+import System.FilePath
+
+import Result
 
 --
 -- GA TYPE CLASS IMPLEMENTATION
 --
 
-ev = evolve :: StdGen -> GAConfig -> [BV] -> (Double, ([BV] -> IO (Double, Int))) -> IO (Archive [BV] Int)
+type Score = (Double, [Int])
+type FitnessRun = [BV] -> IO Score
 
--- TODO: implement in case we ever need to parse Bit (Bang) Vectors
 readsBV = undefined
 
-instance Read BV where -- TODO is this ok?
+instance Read BangVec where -- TODO is this ok?
   readsPrec _ s = readsBV
 
-printBits' :: [Bool] -> String
-printBits' = concatMap (\b -> if b then "1" else "0")
+printBits :: [Bool] -> String
+printBits = concatMap (\b -> if b then "1" else "0")
 
-instance Entity [BV] Int (Double, ([BV] -> IO (Double, Int))) [BV] IO where
+instance Entity [BV] [Int] (Double, FitnessRun) [[BV]] IO where
  
   -- Generate a random bang vector
   -- Invariant: pool is the vector with all bangs on
-  genRandom pool seed = do {Just e <- mutation pool 0.4 seed pool; return $ e}
+  --  genRandom pool seed = do {Just e <- mutation pool 0.4 seed pool; return $ e}
+  genRandom pool seed = do 
+                           let g = mkStdGen seed
+                               index = (fst $ randomR (0, (length pool) - 1) g) :: Int
+                           print index
+                           return $ pool !! index
+
   
   crossover pool p seed es1 es2 = do
-                                    vecs <- sequence $ map (uncurry . uncurry $ crossoverSingle) $ (zip (zip es1 es2) pool)
+                                    vecs <- sequence $ map (uncurry . uncurry $ crossoverSingle) $ (zip (zip es1 es2) $ head pool)
                                     return $! sequence vecs
                                   where
                                     crossoverSingle e1 e2 pool = do 
@@ -68,9 +88,47 @@ instance Entity [BV] Int (Double, ([BV] -> IO (Double, Int))) [BV] IO where
   score (baseTime, fitRun) bangVecs = do 
     (newTime, nBangs) <- fitRun bangVecs
     let score = if newTime >= 0 then (newTime / baseTime) else 2
-    putStrLn $ "bits: " ++ (concat $ (map (printBits' . toBits) bangVecs)) ++ ", " ++ (show nBangs) ++ ", " ++ (show score) ++ ", " ++ (show baseTime)
-    return $! Just (if (score >= 0 && score <= 1.05) then nBangs else (1000))
+        s' = (if (score >= 0 && score <= 1.05) then nBangs else (replicate (length nBangs) 1000))
+    putStrLn $ "bits: " ++ (concat $ (map (printBits . toBits) bangVecs)) ++ ", " ++ (show nBangs) ++ ", " ++ (show score) ++ ", " ++ (show baseTime) ++ ". " ++ (show s')
+    return $! Just s'
 
   showGeneration _ (_,archive) = "best: " ++ (show fit)
     where
       (Just fit, _) = head archive
+
+ev :: Cfg -> IO [([BangVec], Double)]
+ev = undefined
+{-
+ev autobahnCfg = do
+    let projDir = projectDir autobahnCfg
+        cfg = createGAConfig autobahnCfg
+        files = coverage autobahnCfg
+        fitnessReps = fitnessRuns autobahnCfg
+        baseTime  = getBaseTime autobahnCfg
+        baseMetric  = getBaseMetric autobahnCfg
+
+    checkBaseProgram baseTime baseMetric
+    print baseTime
+    print baseMetric
+    
+    let absPaths = map (\x -> projDir ++ "/" ++ x) files
+        fitnessTimeLimit = deriveFitnessTimeLimit baseTime
+
+  -- Pool: bit vector representing original progam
+    progs <- sequence $ map readFile absPaths
+    bs <- sequence $ map readBangs absPaths
+    let !vecPool = rnf progs `seq` map fromBits bs
+
+  -- Do the evolution!
+    es <- evolve g cfg [vecPool] (baseMetric,
+                                       fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
+                                       
+    return $ map foo es
+    where
+       getScore s = case s of
+                        Nothing -> error "filter should have removed all Nothing"
+                        Just n -> n
+       foo (Just (time), bv) = (bv, time)
+       foo (Nothing, bv) = (bv, -1000)
+
+-}

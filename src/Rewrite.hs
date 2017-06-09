@@ -22,8 +22,8 @@ bangParseMode path = defaultParseMode
   , baseLanguage = Haskell2010
   , extensions = [EnableExtension BangPatterns]
   , ignoreLanguagePragmas = False
-  , ignoreLinePragmas = False
-  , fixities = Nothing
+  , ignoreLinePragmas = True
+  , fixities = Just preludeFixities
   , ignoreFunctionArity = False
   }
 
