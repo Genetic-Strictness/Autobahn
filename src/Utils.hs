@@ -12,6 +12,7 @@ import GA
 import qualified Data.BitVector as B
 import Data.Bits
 import Data.Int
+import Data.List
 import System.Environment
 import System.IO
 import System.Process
@@ -27,16 +28,61 @@ import Data.Maybe (isJust, fromJust)
 reps :: Int64
 reps = runs
 
-checkBaseProgram :: Double -> Double -> IO ()
-checkBaseProgram baseTime baseMetric = if baseTime < 0
-                                       then error $ "Base program ran longer than expected. " ++
-                                                  "We suggest a larger time budget."
-                                       else if baseMetric <= 0
-                                            then error $ "Base measurement is negligible (0). " ++
-                                                 "Autobahn cannot optimize."
-                                            else putStr $ "Base measurement is: " ++ (show baseTime)
+numBangs :: [(Bool, Int)] -> Int
+numBangs bs = foldr (\n count -> if fst n then count + 1 else count) 0 bs
 
-fitness :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO (Time, Int)
+numPats :: [[Bool]] -> Int
+numPats bs = foldl (\acc x -> acc + (length x)) 0 bs
+
+countBangs :: [[Bool]] -> Int
+countBangs bv = foldl (\acc f -> acc + count f) 0 bv
+	            where count f = foldr (\n acc -> if n then acc + 1 else acc) 0 f  
+
+checkBaseProgram :: Double -> Double -> IO ()
+checkBaseProgram baseTime baseMetric = 
+    if baseTime < 0
+    then error $ "Base program ran longer than expected. " ++
+                 "We suggest a larger time budget."
+    else if baseMetric <= 0
+         then error $ "Base measurement is negligible (0). " ++
+                      "Autobahn cannot optimize."
+         else putStrLn $ "Base measurement is: " ++ (show baseTime)
+
+-- given list of files to optimize and list of files in directory, 
+-- returns list of files to optimize if there are any
+checkFiles :: [[Char]] -> [[Char]] -> IO [[Char]]
+checkFiles files fsInDir = do
+    if length files == 0
+    then error $ "There are no files to be optimized."
+    else do
+         let extraFiles = files \\ fsInDir
+         if (length extraFiles) > 0 
+         then putStrLn $ "To improve Autobahn performance," 
+			  ++ "add the following files to your directory: " 
+                          ++ (show extraFiles)
+         else print ""
+         return extraFiles
+
+checkRunTimeError :: Double -> IO()
+checkRunTimeError time =
+    if time < 0
+    then error $ "Invalid negative runtime - ERROR"
+    else putStr $ "Valid runtime."
+
+checkImprovement :: Double -> Double -> IO()
+checkImprovement surBaseTime baseTime = 
+    if (((baseTime - surBaseTime)/baseTime) <= 0.06) 
+       || surBaseTime < 0                               
+    then error $ "Phase 1 improvement is negligible."
+    else putStr $ "improvement is noticeable."
+
+countSetBits :: [BangVec] -> [Int]
+countSetBits bangs = 
+    map countSetBitsSingle bangs
+    where
+        countSetBitsSingle = length . (filter id) . B.toBits 
+
+fitness :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO (Time, [Int])
 fitness cfg reps files bangVecs = do
   -- Read original
     let absPaths = map (\x -> projectDir cfg ++ "/" ++ x) files
@@ -49,10 +95,10 @@ fitness cfg reps files bangVecs = do
     !(_, newMetricStat) <- benchmark cfg reps
   -- Recover original
     !_ <- sequence $ map (uncurry writeFile) $ zip absPaths progs
-    let n_ones = length . (filter (\x -> x)) . B.toBits $ head bangVecs
+    let n_ones = countSetBits bangVecs
     return (newMetricStat, n_ones)
 
-fitnessNBangs :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO Int
+fitnessNBangs :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO [Int]
 fitnessNBangs cfg reps files bangVecs = do
   -- Read original
     let absPaths = map (\x -> projectDir cfg ++ "/" ++ x) files
@@ -65,5 +111,5 @@ fitnessNBangs cfg reps files bangVecs = do
     !(_, newMetricStat) <- benchmark cfg reps
   -- Recover original
     !_ <- sequence $ map (uncurry writeFile) $ zip absPaths progs
-    let n_ones = length . (filter (\x -> x)) . B.toBits $ head bangVecs
-    return (if newMetricStat < 0 then 1000 else n_ones)
+    let n_ones = countSetBits bangVecs
+    return (if newMetricStat < 0 then (replicate 1000 $ length bangVecs) else n_ones)

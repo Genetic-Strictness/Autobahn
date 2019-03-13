@@ -5,7 +5,8 @@
 
 module GeneAlg where
 
-import System.Random (mkStdGen, random, randoms)
+import System.Random (getStdGen, mkStdGen, random, randoms)
+import System.Random (StdGen)
 import GA (Entity(..), GAConfig(..), Archive(..), evolve, evolveVerbose, randomSearch)
 import Data.BitVector (BV, fromBits, toBits, size, ones)
 import Data.Bits.Bitwise (fromListLE, fromListBE, toListBE)
@@ -21,7 +22,7 @@ import Rewrite (readBangs)
 -- GA TYPE CLASS IMPLEMENTATION
 --
 
-type Score = (Double, Int)
+type Score = (Double, [Int])
 type FitnessRun = [BangVec] -> IO Score
 
 -- TODO: implement in case we ever need to parse Bit (Bang) Vectors
@@ -76,34 +77,44 @@ instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
     putStrLn $ "bits: " ++ (concat $ (map (printBits . toBits) bangVecs)) ++ ", " ++ (show score) ++ ", " ++ (show nBangs) ++ ", " ++ (show baseTime)
     return $! Just (score, nBangs)
 
+{-
   showGeneration _ (_,archive) = "best: " ++ (show fit)
     where
-      (Just fit, _) = head archive
+      (Just fit, _) = head archive 
+-}
 
-ev :: Cfg -> IO [([BangVec], Double)]
+
+evolveProg :: StdGen -> GAConfig -> [BangVec] -> (Time, FitnessRun) -> IO (Archive [BangVec] Score)
+evolveProg = GA.evolve
+
+ev:: Cfg -> IO [([BangVec], Double)]
 ev autobahnCfg = do
-      let projDir = projectDir autobahnCfg
-          cfg = createGAConfig autobahnCfg
-          files = coverage autobahnCfg
-          fitnessReps = fitnessRuns autobahnCfg
-          baseTime = getBaseTime autobahnCfg
-          baseMetric = getBaseMetric autobahnCfg
+    let projDir = projectDir autobahnCfg
+        cfg = createGAConfig autobahnCfg
+        files = coverage autobahnCfg
+        fitnessReps = fitnessRuns autobahnCfg
+        baseTime  = getBaseTime autobahnCfg
+        baseMetric  = getBaseMetric autobahnCfg
 
-      checkBaseProgram baseTime baseMetric
-      print baseTime
-      print baseMetric
+    checkBaseProgram baseTime baseMetric
+    print baseTime
+    print baseMetric
+    
+    let absPaths = map (\x -> projDir ++ "/" ++ x) files
+        fitnessTimeLimit = deriveFitnessTimeLimit baseTime
 
-      let absPaths = map (\x -> projDir ++ "/" ++ x) files
-          fitnessTimeLimit = deriveFitnessTimeLimit baseTime
+  -- Pool: bit vector representing original progam
+    progs <- sequence $ map readFile absPaths
+    bs <- sequence $ map readBangs absPaths
+    let !vecPool = rnf progs `seq` map fromBits bs
 
-      progs <- sequence $ map readFile absPaths
-      bs <- sequence $ map readBangs absPaths
-      let !vecPool = rnf progs `seq` map fromBits bs
+  -- Do the evolution!
+    generator <- getStdGen
+    es <- evolve generator cfg vecPool (baseMetric,
+                                       fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
+                                       
+    return $ map foo es
 
-      es <- evolve g cfg vecPool (baseMetric, fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files) :: IO (Archive [BangVec] Score)
-
-      return $ map foo es
-
-      where   
-         foo (Just (time, _), bv) = (bv, time)
-         foo (Nothing, bv) = (bv, -1000)
+    where
+       foo (Just (time, _), bv) = (bv, time)
+       foo (Nothing, bv) = (bv, -1000)

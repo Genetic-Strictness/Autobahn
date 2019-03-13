@@ -189,6 +189,7 @@ algToType "genetic" = ORIGINAL
 algToType "minimize" = MINIMIZE
 algToType _ = error "Unknown algorithm"
 
+
 calculateInputs :: Cfg -> IO Cfg
 calculateInputs cfg = do
             (pop', gen', arch', nRuns, baseTime, baseMetric) <- convertTimeToGens cfg

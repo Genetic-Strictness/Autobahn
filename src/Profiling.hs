@@ -17,20 +17,21 @@ import System.Directory (setCurrentDirectory, getCurrentDirectory)
 --
 
 pathToNoFib :: String
-pathToNoFib = "/data/dan"
+pathToNoFib = "/data/marilyn"
 
 -- Build a cabal project. Project must be configured with cabal. `projDir` is in the current dir
 buildProj :: FilePath -> IO ExitCode
-{-
--- For cabal files
-buildProj projDir = system $ "cd " ++ projDir ++ "; cabal configure -v0; cabal build -v0"
--}
 
+-- For cabal files
+buildProj projDir = system $ "cd " ++ projDir ++ "; cabal configure -v0 --enable-profiling; cabal build -v0"
+
+{-
 -- For nofib makefile specifically
 buildProj projDir = do 
   setCurrentDirectory projDir
-  system "make clean -s; make boot -s &> /dev/null"
-
+  putStrLn projDir
+  system "make clean; make boot" -- &> /dev/null"
+-}
 
 statsFromMetric :: MetricType -> [(String, String)] -> Double
 statsFromMetric RUNTIME stats = let Just muts = lookup "mutator_cpu_seconds" stats
@@ -53,50 +54,46 @@ benchmark !(cfg @ Cfg
         _ -> return ((0 - 1), (0 - 1))
       where
         projDir = projectDir cfg
-        mainFile = executable cfg -- TODO: more of coverage
-{-        runProj = "timeout " ++ (show . round $ timeLimit) ++ "s " ++ projDir ++ "/dist/build/" 
-                         ++ takeBaseName mainFile ++ "/" ++ takeBaseName mainFile
-                         ++ "bintree" ++ "/" ++ "bintree"
-                         ++ " " ++ inputArgs cfg
-                         ++ " -q +RTS -ttiming.temp --machine-readable"
-                         ++ " > /dev/null"
--}
-{-
--- For the zoo
-        runProj = "cd " ++ projDir ++ " && bash run.sh Main"
--}
+        mainFile = executable cfg 
+        runProj = "cd " ++ projDir ++ "; timeout " ++ (show . round $ timeLimit) 
+		        ++ "s " ++ projDir ++ "/dist/build/" 
+                        ++ takeBaseName projDir ++ "/" ++ takeBaseName projDir
+                        ++ " " ++ inputArgs cfg
+                        ++ " -q +RTS -pa -ttiming.temp --machine-readable"
+                        ++ " > /dev/null"
 
+{-
 -- For nofib makefile specifically
         runProj = "make -k mode=norm > nofib-gen 2>&1"
-
-        cleanProj = "rm -f timing.temp"
-        executeProj = do 
+-}        
+        cleanProj = "cd " ++ projDir ++ "; rm -f timing.temp"
+        executeProj = do
+	  d <- getCurrentDirectory
+          putStrLn d 
           putStrLn $ "Running: " ++ runProj
-          d <- getCurrentDirectory
-          putStrLn d
-          exitc <- system $ runProj 
+          exitc <- system $ runProj
           case exitc of
             ExitFailure _ -> return ((0 - 1), (0 - 1))
 
--- Getting timing for nofib
+{-
+-- For nofib makefile specifically 
             ExitSuccess   -> do
-       	    		       system $ pathToNoFib ++ "/nofib/nofib-analyse/nofib-analyse --csv=Runtime nofib-gen nofib-gen > temp.prof" -- TODO heuristcs hardcoded
+       	    		       system $ pathToNoFib ++ "/nofib/nofib-analyse/nofib-analyse --csv=Runtime nofib-gen nofib-gen > temp.prof"
 			       
-       	    		       -- TODO dirty hack here! abusing nofib-analyse
 			       fc <- readFile "temp.prof"
 			       let wcs = words $ map (\c -> if c == ',' then ' ' else c) fc
-			       -- system "rm nofib-gen; rm temp.prof"
 			       return ((read $ wcs !! 1), (read $ wcs !! 1))
-{-
--- Read for anything else
-            ExitSuccess   -> do 
+-}
 
+-- For cabal files 
+            ExitSuccess   -> do 
               !t <- readFile $ projDir ++ "/" ++ "timing.temp"
               system cleanProj
+	      system $ "cd " ++ d 
               let s = unlines . tail . lines $ t
                   stats = read s :: [(String, String)]
               runtime <- return $ statsFromMetric RUNTIME stats
+              print runtime
               case metric of
                 RUNTIME   -> return (runtime, runtime)
                 otherwise -> return (runtime, statsFromMetric metric stats)
--}
