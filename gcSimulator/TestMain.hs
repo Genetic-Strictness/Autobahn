@@ -1,3 +1,0 @@
-import MainTest
-
-main = maintest

@@ -1,5 +1,0 @@
-projectDirectory = "bintree"
-budgetTime = 2h
-coverage = "Main.hs"
-targetMetric = "peakAlloc"
-inputArg = "5"

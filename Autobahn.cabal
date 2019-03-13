@@ -7,7 +7,7 @@ name:                Autobahn
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.2.0.0
+version:             2.0.0.0
 
 -- A short (one-line) description of the package.
 synopsis: A tool for inferring strictness annotations in Haskell programs.
@@ -22,11 +22,11 @@ synopsis: A tool for inferring strictness annotations in Haskell programs.
 license-file:        LICENSE
 
 -- The package author(s).
-author:              Yisu Remy Wang
+author:              Marilyn Sun, Yisu Remy Wang
 
 -- An email address to which users can send suggestions, bug reports, and 
 -- patches.
-maintainer:          remywang@protonmail.com
+maintainer:          19marilyns@gmail.com
 
 -- A copyright notice.
 -- copyright:           
@@ -50,18 +50,18 @@ executable Autobahn
   -- LANGUAGE extensions used by modules in this package.
   other-extensions:    BangPatterns, FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances
  
-  other-modules: Config, GeneAlg, GeneAlg2, Profiling, Result, Rewrite, Types, Utils
+  other-modules: Config, GeneAlg, GeneAlg2, Profiling, Result, Rewrite, Types, Utils, Parse, Min
 
   -- Other library packages from which modules are imported.
 
-  build-depends:        base >=4.9
+  build-depends:        base >=4.8
                       , random
                       , GA
                       , process
                       , bitwise
                       , text
                       , deepseq
-                      , haskell-src-exts >=1.17 && <1.18
+                      , haskell-src-exts >=1.19
                       , directory
                       , filepath
                       , bv
@@ -71,26 +71,13 @@ executable Autobahn
                       , parsec
                       , html
                       , filepath
-  
+                      , split
+                      , ghc-prof
+                      , scientific
+
   ghc-options: -O2 -rtsopts "-with-rtsopts=-T"
   -- Directories containing source files.
   hs-source-dirs: src/     
   
   -- Base language which the package is written in.
   default-language:    Haskell2010
- 
-test-suite test-autobahn
-  type:           exitcode-stdio-1.0
-  main-is:        test/Test.hs
-  build-depends:  base
-                , process
-                , directory
-                , QuickCheck
-                , HUnit
-                , Cabal
-                , test-framework
-                , test-framework-hunit
-                , test-framework-quickcheck2
-
-  default-language: Haskell2010
-

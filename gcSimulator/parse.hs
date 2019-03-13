@@ -1,3 +1,0 @@
-import EtParser
-
-main = do

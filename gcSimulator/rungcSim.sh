@@ -1,1 +1,0 @@
-./gcSimulator ../batik.trace
