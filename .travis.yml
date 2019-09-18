@@ -1,5 +1,4 @@
 
-language: haskell
 ghc:
   - "8.0.1"
 
@@ -26,7 +25,8 @@ addons:
     - ghc-8.0.1
 
 #--solver --resolver lts-7.2
-#install:
+install:
+- pwd; ls; cd Autobahn; stack --no-terminal --skip-ghc-check test
 #- stack --no-terminal --resolver lts-7.2 update
 
 script:
