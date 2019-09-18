@@ -28,7 +28,7 @@ addons:
 #--solver --resolver lts-7.2
 install:
 - stack --no-terminal --resolver lts-7.2 update
-- stack --no-terminal --resolver lts-7.2 upgrade
+- stack --no-terminal upgrade
 
 script:
   - stack --no-terminal --skip-ghc-check test
