@@ -22,10 +22,11 @@ addons:
     packages:
     - ghc-8.0.1
 
+#--solver --resolver lts-7.2
 install:
   - stack --no-terminal --skip-ghc-check install cabal-install
-#  - stack --no-terminal --skip-ghc-check init --solver --resolver lts-7.2
-#  - stack --no-terminal --skip-ghc-check setup
+  - stack --no-terminal --skip-ghc-check init
+  - stack --no-terminal --skip-ghc-check setup
   - stack --no-terminal --skip-ghc-check test --only-snapshot
 
 script:
