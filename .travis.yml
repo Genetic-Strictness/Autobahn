@@ -24,12 +24,12 @@ addons:
 
 #--solver --resolver lts-7.2
 install:
-  - stack --no-terminal --skip-ghc-check install cabal-install
-  - stack --no-terminal --skip-ghc-check init
-  - stack --no-terminal --skip-ghc-check setup
-  - stack --no-terminal --skip-ghc-check test --only-snapshot
+  - stack --no-terminal install cabal-install
+  - stack --no-terminal init
+  - stack --no-terminal setup
+  - stack --no-terminal test --only-snapshot
 
 script:
-  - stack --no-terminal --skip-ghc-check install
-  - time stack --no-terminal --skip-ghc-check test
+  - stack --no-terminal install
+  - time stack --no-terminal test
 
