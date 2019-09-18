@@ -25,11 +25,11 @@ addons:
     - ghc-8.0.1
 
 #--solver --resolver lts-7.2
-install:
-- pwd; ls; cd Autobahn; stack --no-terminal --skip-ghc-check test
+#install:
+#- pwd; ls; stack --no-terminal --skip-ghc-check test
 #- stack --no-terminal --resolver lts-7.2 update
 
 script:
-  - pwd; ls; cd Autobahn; stack --no-terminal --skip-ghc-check test
+- pwd; ls; stack --no-terminal --skip-ghc-check test
 #  - time stack --no-terminal test
 
