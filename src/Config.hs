@@ -23,9 +23,9 @@ import System.IO
 runs :: Int64
 runs = 1
 
--- 
+--
 -- CONFIG FOR GENETIC ALG
--- 
+--
 
 deriveFitnessTimeLimit :: Double -> Double
 deriveFitnessTimeLimit = (*) 2
@@ -42,7 +42,7 @@ g = mkStdGen 0 -- random generator
 readLnWDefault :: Read a => a -> IO a
 readLnWDefault def = do
   cont <- getLine
-  case readMaybe cont 
+  case readMaybe cont
     of Nothing -> return def
        Just res -> return res
 
@@ -50,7 +50,7 @@ readLnWDefault def = do
  - Create the configuration specific to the GA library
  -}
 createGAConfig :: Cfg -> GAConfig
-createGAConfig cfg = GAConfig 
+createGAConfig cfg = GAConfig
   { getPopSize            = pop cfg
   , getArchiveSize        = arch cfg
   , getMaxGenerations     = gen cfg
@@ -66,7 +66,7 @@ createGAConfig cfg = GAConfig
  -  Read from the command line and produce an Autobahn Configuration
  -}
 cliCfg :: IO Cfg
-cliCfg = do 
+cliCfg = do
   putStrLn "No config.atb file found, please specify parameters as prompted"
   putStrLn "<Enter> to use [defaults]"
 
@@ -123,7 +123,7 @@ readCfg fp = do {
 
 {-
  - Determine the configuration from the time limit and the base time
- - Derived from 
+ - Derived from
  -    (1) the ratio of generations to population, 4 : 3, from the paper and
  -    (2) generations * population * (2 * baseTime) = timeLimit
  -}
@@ -202,7 +202,7 @@ calculateInputs cfg = do
                          }
 
 parseCfgFile :: SourceName -> Line -> Column -> String -> Either ParseError [CfgAST]
-parseCfgFile fileName ln col text = 
+parseCfgFile fileName ln col text =
   PP.parse cfgDefs fileName text
   where
     cfgDefs = do {
@@ -277,7 +277,7 @@ projDirRule = do {
 targetMetricRule :: PS.Parser CfgAST
 targetMetricRule = do {
                    reserved "targetMetric"
-                   ; reservedOp "=" 
+                   ; reservedOp "="
                    ; x <- parseMetric
                    ; return $ METRIC x
                    }

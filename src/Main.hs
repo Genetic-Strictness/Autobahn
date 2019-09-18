@@ -41,8 +41,8 @@ performEvolve cfg = let alg = algorithm cfg in
                       ORIGINAL -> G1.ev cfg
                       otherwise -> error $ "Unkown algorithm type: " ++ (show alg)
 
-main :: IO () 
-main = do 
+main :: IO ()
+main = do
   hSetBuffering stdout LineBuffering
   args <- getArgs
   cfg <- if null args then gatherCfg else manufactureCfg args
@@ -52,12 +52,12 @@ main = do
   putStrLn $ "Optimization finished, please inspect and select candidate changes "
    ++ "(found in AutobahnResults under project root)"
       where
-          gatherCfg = do 
+          gatherCfg = do
             putStrLn "Configure optimization..."
             cfgExist <- doesFileExist cfgFile
             cfg <- if cfgExist then readCfg cfgFile else cliCfg
             return cfg
-          manufactureCfg args = do 
+          manufactureCfg args = do
                                      [a, b, c, d, e, f, g] <- getArgs
                                      (baseTime, baseMetric) <- benchmark (defaultCfgWithProjectDir a) 1
                                      allFiles <- getDirectoryContents a
@@ -83,6 +83,7 @@ main = do
 gmain :: Cfg -> IO ()
 gmain autobahnCfg = do
     let projDir = projectDir autobahnCfg
+        exe = executable autobahnCfg
         cfg = createGAConfig autobahnCfg
         filesInDir = coverage autobahnCfg
         fitnessReps = fitnessRuns autobahnCfg
@@ -102,36 +103,36 @@ gmain autobahnCfg = do
 
 --------------------Pre-profiling-----------------------
 -- Identify files to optimize.
--- If no files suitable for optimization, error. 
--- If files to optimize not in directory, alert user. 
-    
+-- If no files suitable for optimization, error.
+-- If files to optimize not in directory, alert user.
+
     putStrLn $ ">>>>>>>>>>>>>>>PRE-OPTIMIZATION>>>>>>>>>>>>>>>"
 
     benchmark (defaultCfgWithProjectDir projDir) 1
-    hs <- parseProfile (profileMetric autobahnCfg) (hotSpotThresh autobahnCfg) 
+    hs <- parseProfile (profileMetric autobahnCfg) (hotSpotThresh autobahnCfg)
             -- $ addExtension (takeBaseName projDir) "prof"
-            $ addExtension (projDir ++ "/" ++ (takeBaseName projDir)) "prof"
+            $ addExtension (projDir ++ "/" ++ (takeBaseName exe)) "prof"
 
-    let hs'     = compileFiles hs 
+    let hs'     = compileFiles hs
         hsFiles = fst $ unzip hs'
-  
-    extraFiles <- checkFiles hsFiles filesInDir 
-   
+
+    extraFiles <- checkFiles hsFiles filesInDir
+
     let files      = hsFiles \\ extraFiles
         noCutFiles = (length filesInDir) - (length files)
         cutFiles   = filesInDir \\ files
 
     let cutFiles'         = map (\x -> projDir ++ "/" ++ x) cutFiles
-    cutPs <- sequence $ map readBangs cutFiles' 
+    cutPs <- sequence $ map readBangs cutFiles'
 
     putStrLn "Original files in directory:"
-    print filesInDir 
+    print filesInDir
     putStrLn "Files cut during pre-opt:"
     print cutFiles
- 
-    let noCutPats = foldl (\acc x -> acc + length x) 0 cutPs 
-        resPre    = "noExtraFiles\t" ++ (show $ length extraFiles) ++ "\textraFiles\t" 
-                    ++ (show extraFiles) ++ "\tnoCutFiles\t" ++ (show noCutFiles) 
+
+    let noCutPats = foldl (\acc x -> acc + length x) 0 cutPs
+        resPre    = "noExtraFiles\t" ++ (show $ length extraFiles) ++ "\textraFiles\t"
+                    ++ (show extraFiles) ++ "\tnoCutFiles\t" ++ (show noCutFiles)
                     ++ "\tnoCutPats\t" ++ (show noCutPats)
 
 --------------------Autobahn-----------------------
@@ -148,7 +149,7 @@ gmain autobahnCfg = do
         len      = numPats bs
 
 -- Do the evolution!
-    generator <- getStdGen -- get random generator each time 
+    generator <- getStdGen -- get random generator each time
     es        <- G1.evolveProg generator cfg vecPool (baseMetric,
                                        fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
 
@@ -159,16 +160,16 @@ gmain autobahnCfg = do
         atbResult = if (fst score) > 1 then vecPool else e
         bitVec    = map B.toBits e
 
-    progs' <- sequence $ map (uncurry editBangs) $ zip absPaths bitVec 
+    progs' <- sequence $ map (uncurry editBangs) $ zip absPaths bitVec
 
     let bestMetricPerc = fst $ D.fromJust $ fst $ head $ filter (\x -> D.isJust $ fst x) es
     checkImprovement (bestMetricPerc*baseTime) baseTime
-    
+
     let origNumBangs   = countBangs bs
-        autNumBangs    = countBangs bitVec 
-        resAut         = "baseTime\t1" ++ "\torigNumBangs\t" ++ (show origNumBangs) 
-                         ++ "\tAut1Time\t" ++ (show bestMetricPerc) ++ "\tAut1Bangs\t" 
-                         ++ (show autNumBangs)  
+        autNumBangs    = countBangs bitVec
+        resAut         = "baseTime\t1" ++ "\torigNumBangs\t" ++ (show origNumBangs)
+                         ++ "\tAut1Time\t" ++ (show bestMetricPerc) ++ "\tAut1Bangs\t"
+                         ++ (show autNumBangs)
 
 -- Write the original files back to disk
     sequence $ map (uncurry writeFile) $ zip absPaths progs
@@ -178,10 +179,10 @@ gmain autobahnCfg = do
 
 -- Write result
     putStrLn $ "best entity (GA): " ++ (unlines $ (map (G1.printBits . B.toBits) atbResult))
-  
+
     let newPath = projDir ++ "/" ++ "autobahn-survivor"
     code <- system $ "mkdir -p " ++ newPath
-    
+
     let surPaths     = map (\x -> projDir ++ "/" ++ "autobahn-survivor/" ++ x) files
         survivorDirs = map (takeDirectory) surPaths
     sequence $ map (\x -> system $ "mkdir -p " ++ x) survivorDirs
@@ -204,7 +205,7 @@ gmain autobahnCfg = do
 
 -- obtain original profile
 -- Pool: bit/loc vector representing original progam
--- need to manually erase bangs from surPaths because original file 
+-- need to manually erase bangs from surPaths because original file
 -- contains extra lines/comments
     bsA      <- sequence $ map readMinBangs surPaths
     let bsUnopt = map (\(f, bangs) -> (f, eraseBangs bangs)) bsA
@@ -212,14 +213,14 @@ gmain autobahnCfg = do
     sequence $ map (uncurry writeFile) $ zip absPaths unopt_progs
 
     benchmark (defaultCfgWithProjectDir projDir) 1
-    hotSpots <- parseProfile (profileMetric autobahnCfg) (hotSpotThresh autobahnCfg) 
+    hotSpots <- parseProfile (profileMetric autobahnCfg) (hotSpotThresh autobahnCfg)
 --                  $ addExtension (takeBaseName projDir) "prof"
                   $ addExtension (projDir ++ "/" ++ (takeBaseName projDir)) "prof"
-    
+
     let hotSpots'     = compileFiles hotSpots
 
--- Pool: bit/loc vector representing optimized progam 
---  copy survivor files, get survivor base time 
+-- Pool: bit/loc vector representing optimized progam
+--  copy survivor files, get survivor base time
     progsA <- sequence $ map readFile surPaths
     sequence $ map (uncurry writeFile) $ zip absPaths progsA
     bsA      <- sequence $ map readMinBangs absPaths
@@ -230,7 +231,7 @@ gmain autobahnCfg = do
 -- individually test each hot spot
     let bsHS = modBangs hotSpots' bsA
     minBangs <- mapM (\src -> do
-      let bs'' = modBangs (hotSpots' \\ [src]) bsHS 
+      let bs'' = modBangs (hotSpots' \\ [src]) bsHS
       progs'' <- sequence $ map (uncurry editBangs) $ zip surPaths (map (\x -> fst $ unzip $ snd x) bs'')
       sequence $ map (uncurry writeFile) $ zip absPaths progs''
       (tempTime, tempBaseMetric) <- benchmark (defaultCfgWithProjectDir projDir) 1
@@ -249,7 +250,7 @@ gmain autobahnCfg = do
 
     let timeRatio = minTime/surTime
         bangRatio = (fromIntegral minNumBangs)/(fromIntegral surNumBangs)
-        resPost   = "Aut2:\toriginalTime 1\torigBangs\t" ++ (show origNumBangs) 
-                     ++ "\tAut1Time\t" ++ (show (surTime/baseTime)) ++ "\tAut1Bangs\t" ++ (show surNumBangs) 
+        resPost   = "Aut2:\toriginalTime 1\torigBangs\t" ++ (show origNumBangs)
+                     ++ "\tAut1Time\t" ++ (show (surTime/baseTime)) ++ "\tAut1Bangs\t" ++ (show surNumBangs)
                      ++ "\tAut2Time\t" ++ (show (minTime/baseTime)) ++ "\tAut2Bangs\t" ++ (show minNumBangs)
     writeFile "minresults" (resPre ++ "\n" ++ resAut ++ "\n" ++ resPost)

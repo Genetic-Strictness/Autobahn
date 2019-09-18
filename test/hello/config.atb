@@ -4,4 +4,4 @@ coverage = "hello.hs"
 executable = "hello.hs"
 targetMetric = "peakAlloc"
 fitnessRuns = 1
-inputArg = "40"
+inputArg = "44"

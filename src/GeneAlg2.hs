@@ -39,24 +39,24 @@ printBits :: [Bool] -> String
 printBits = concatMap (\b -> if b then "1" else "0")
 
 instance Entity [BV] [Int] (Double, FitnessRun) [[BV]] IO where
- 
+
   -- Generate a random bang vector
   -- Invariant: pool is the vector with all bangs on
   --  genRandom pool seed = do {Just e <- mutation pool 0.4 seed pool; return $ e}
-  genRandom pool seed = do 
+  genRandom pool seed = do
                            let g = mkStdGen seed
                                index = (fst $ randomR (0, (length pool) - 1) g) :: Int
                            print index
                            return $ pool !! index
 
-  
+
   crossover pool p seed es1 es2 = do
                                     vecs <- sequence $ map (uncurry . uncurry $ crossoverSingle) $ (zip (zip es1 es2) $ head pool)
                                     return $! sequence vecs
                                   where
-                                    crossoverSingle e1 e2 pool = do 
+                                    crossoverSingle e1 e2 pool = do
                                       let len = size pool
-                                          g = mkStdGen seed 
+                                          g = mkStdGen seed
                                           fs = take len $ randoms g :: [Float]
                                           bs = map (< 0.5) fs
                                           s = fromBits bs
@@ -64,8 +64,8 @@ instance Entity [BV] [Int] (Double, FitnessRun) [[BV]] IO where
                                           e2' = complement s .&. e2
                                           e' = e1' .|. e2'
                                       return $! Just e'
-                                      
-  -- Mutation operator 
+
+  -- Mutation operator
   mutation pool p seed es = do
                               vecs <- sequence $ map (mutateSingle) es
                               return $! sequence vecs
@@ -81,7 +81,7 @@ instance Entity [BV] [Int] (Double, FitnessRun) [[BV]] IO where
 
   -- Improvement on base time
   -- NOTE: lower is better
-  score (baseTime, fitRun) bangVecs = do 
+  score (baseTime, fitRun) bangVecs = do
     (newTime, nBangs) <- fitRun bangVecs
     let score = if newTime >= 0 then (newTime / baseTime) else 2
         s' = (if (score >= 0 && score <= 1.05) then nBangs else (replicate (length nBangs) 1000))
@@ -110,7 +110,7 @@ ev autobahnCfg = do
     checkBaseProgram baseTime baseMetric
     print baseTime
     print baseMetric
-    
+
     let absPaths = map (\x -> projDir ++ "/" ++ x) files
         fitnessTimeLimit = deriveFitnessTimeLimit baseTime
 
@@ -122,7 +122,7 @@ ev autobahnCfg = do
   -- Do the evolution!
     es <- evolve g cfg [vecPool] (baseMetric,
                                        fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
-                                       
+
     return $ map foo es
     where
        getScore s = case s of

@@ -29,7 +29,7 @@ instance Show AlgorithmTy where
     show ORIGINAL = "original"
     show MINIMIZE = "minimize"
 
-data Cfg = Cfg 
+data Cfg = Cfg
   { projectDir :: String
   , timeBudget :: Double
   , getBaseTime :: Double
@@ -47,7 +47,7 @@ data Cfg = Cfg
   , hotSpotThresh :: Double
   , profileMetric :: String } deriving Show
 
-data CfgAST = 
+data CfgAST =
     BUDGET Double
   | DIR String
   | SRCS [String]
@@ -57,10 +57,10 @@ data CfgAST =
   | FILE [CfgAST]
   | EXE String
   | ALG AlgorithmTy
-  | PROFILE String 
+  | PROFILE String
   deriving Show
 
-type BangVec = BV 
+type BangVec = BV
 type Time = Double
 type CCSrc = [([Char], (Int, Int))]
 
@@ -82,8 +82,8 @@ defaultExecutable = "Main.hs"
 defaultMetric :: MetricType
 defaultMetric = RUNTIME
 
-defaultProfile :: String 
-defaultProfile = "RT" 
+defaultProfile :: String
+defaultProfile = "RT"
 
 defaultInput :: String
 defaultInput = ""

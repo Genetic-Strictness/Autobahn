@@ -85,7 +85,7 @@ changeBangs bools x = runState (transformBiM go x) bools
            (b:bs) <- get
            put bs
            if b
-             then return (PParen (getLoc pp) (PBangPat (getLoc pp) pp)) 
+             then return (PParen (getLoc pp) (PBangPat (getLoc pp) pp))
              else return pp
 
 stripTop :: Module SrcSpanInfo -> Module SrcSpanInfo

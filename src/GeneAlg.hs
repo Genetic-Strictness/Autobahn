@@ -29,18 +29,18 @@ printBits :: [Bool] -> String
 printBits = concatMap (\b -> if b then "1" else "0")
 
 instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
- 
+
   -- Generate a random bang vector
   -- Invariant: pool is the vector with all bangs on
   genRandom pool seed = do {Just e <- mutation pool 0.4 seed pool; return $ e}
-  
+
   crossover pool p seed es1 es2 = do
                                     vecs <- sequence $ map (uncurry . uncurry $ crossoverSingle) $ (zip (zip es1 es2) pool)
                                     return $! sequence vecs
                                   where
-                                    crossoverSingle e1 e2 pool = do 
+                                    crossoverSingle e1 e2 pool = do
                                       let len = size pool
-                                          g = mkStdGen seed 
+                                          g = mkStdGen seed
                                           fs = take len $ randoms g :: [Float]
                                           bs = map (< 0.5) fs
                                           s = fromBits bs
@@ -48,8 +48,8 @@ instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
                                           e2' = complement s .&. e2
                                           e' = e1' .|. e2'
                                       return $! Just e'
-                                      
-  -- Mutation operator 
+
+  -- Mutation operator
   mutation pool p seed es = do
                               vecs <- sequence $ map (mutateSingle) es
                               return $! sequence vecs
@@ -65,7 +65,7 @@ instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
 
   -- Improvement on base time
   -- NOTE: lower is better
-  score (baseTime, fitRun) bangVecs = do 
+  score (baseTime, fitRun) bangVecs = do
     (newTime, nBangs) <- fitRun bangVecs
     let score = if newTime >= 0 then (newTime / baseTime) else 2
     putStrLn $ "bits: " ++ (concat $ (map (printBits . toBits) bangVecs)) ++ ", " ++ (show score) ++ ", " ++ (show nBangs) ++ ", " ++ (show baseTime)
@@ -74,7 +74,7 @@ instance Entity [BangVec] Score (Time, FitnessRun) [BangVec] IO where
 {-
   showGeneration _ (_,archive) = "best: " ++ (show fit)
     where
-      (Just fit, _) = head archive 
+      (Just fit, _) = head archive
 -}
 
 
@@ -93,7 +93,7 @@ ev autobahnCfg = do
     checkBaseProgram baseTime baseMetric
     print baseTime
     print baseMetric
-    
+
     let absPaths = map (\x -> projDir ++ "/" ++ x) files
         fitnessTimeLimit = deriveFitnessTimeLimit baseTime
 
@@ -106,7 +106,7 @@ ev autobahnCfg = do
     generator <- getStdGen
     es <- evolve generator cfg vecPool (baseMetric,
                                        fitness (autobahnCfg { getBaseTime = fitnessTimeLimit }) fitnessReps files)
-                                       
+
     return $ map foo es
 
     where

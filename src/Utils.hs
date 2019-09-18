@@ -36,10 +36,10 @@ numPats bs = foldl (\acc x -> acc + (length x)) 0 bs
 
 countBangs :: [[Bool]] -> Int
 countBangs bv = foldl (\acc f -> acc + count f) 0 bv
-	            where count f = foldr (\n acc -> if n then acc + 1 else acc) 0 f  
+                    where count f = foldr (\n acc -> if n then acc + 1 else acc) 0 f
 
 checkBaseProgram :: Double -> Double -> IO ()
-checkBaseProgram baseTime baseMetric = 
+checkBaseProgram baseTime baseMetric =
     if baseTime < 0
     then error $ "Base program ran longer than expected. " ++
                  "We suggest a larger time budget."
@@ -48,7 +48,7 @@ checkBaseProgram baseTime baseMetric =
                       "Autobahn cannot optimize."
          else putStrLn $ "Base measurement is: " ++ (show baseTime)
 
--- given list of files to optimize and list of files in directory, 
+-- given list of files to optimize and list of files in directory,
 -- returns list of files to optimize if there are any
 checkFiles :: [[Char]] -> [[Char]] -> IO [[Char]]
 checkFiles files fsInDir = do
@@ -56,9 +56,9 @@ checkFiles files fsInDir = do
     then error $ "There are no files to be optimized."
     else do
          let extraFiles = files \\ fsInDir
-         if (length extraFiles) > 0 
-         then putStrLn $ "To improve Autobahn performance," 
-			  ++ "add the following files to your directory: " 
+         if (length extraFiles) > 0
+         then putStrLn $ "To improve Autobahn performance,"
+                          ++ "add the following files to your directory: "
                           ++ (show extraFiles)
          else print ""
          return extraFiles
@@ -70,17 +70,17 @@ checkRunTimeError time =
     else putStr $ "Valid runtime."
 
 checkImprovement :: Double -> Double -> IO()
-checkImprovement surBaseTime baseTime = 
-    if (((baseTime - surBaseTime)/baseTime) <= 0.06) 
-       || surBaseTime < 0                               
+checkImprovement surBaseTime baseTime =
+    if (((baseTime - surBaseTime)/baseTime) <= 0.06)
+       || surBaseTime < 0
     then error $ "Phase 1 improvement is negligible."
     else putStr $ "improvement is noticeable."
 
 countSetBits :: [BangVec] -> [Int]
-countSetBits bangs = 
+countSetBits bangs =
     map countSetBitsSingle bangs
     where
-        countSetBitsSingle = length . (filter id) . B.toBits 
+        countSetBitsSingle = length . (filter id) . B.toBits
 
 fitness :: Cfg -> Int64 -> [FilePath] -> [BangVec] -> IO (Time, [Int])
 fitness cfg reps files bangVecs = do
@@ -88,7 +88,7 @@ fitness cfg reps files bangVecs = do
     let absPaths = map (\x -> projectDir cfg ++ "/" ++ x) files
     !progs  <- sequence $ map readFile absPaths
   -- Rewrite from gene
-    !progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits bangVecs) 
+    !progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits bangVecs)
     rnf progs `seq` sequence $ map (uncurry writeFile) $ zip absPaths progs'
   -- Benchmark new
     -- buildProj projDir
@@ -104,7 +104,7 @@ fitnessNBangs cfg reps files bangVecs = do
     let absPaths = map (\x -> projectDir cfg ++ "/" ++ x) files
     !progs  <- sequence $ map readFile absPaths
   -- Rewrite from gene
-    !progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits bangVecs) 
+    !progs' <- sequence $ map (uncurry editBangs) $ zip absPaths (map B.toBits bangVecs)
     rnf progs `seq` sequence $ map (uncurry writeFile) $ zip absPaths progs'
   -- Benchmark new
     -- buildProj projDir
