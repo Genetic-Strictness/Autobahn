@@ -1,2 +1,4 @@
+/*.lock
+/Autobahn.cabal
 dist
 .stack-work

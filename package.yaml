@@ -1,0 +1,50 @@
+name:                Autobahn
+version:             2.0.0.0
+github:              "Genetic-Strictness/Autobahn"
+license:             BSD3
+author:              "Marilyn Sun, Yisu Remy Wang"
+maintainer:          "19marilyns@gmail.com"
+copyright:           "2019"
+
+extra-source-files:
+- README.md
+- LICENSE
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Library
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         A tool for inferring strictness annotations in Haskell programs.
+
+dependencies:
+  - base >= 4.8
+  - random
+  - GA
+  - process
+  - bitwise
+  - text
+  - deepseq
+  - haskell-src-exts >= 1.19
+  - directory
+  - filepath
+  - bv
+  - mtl
+  - uniplate
+  - criterion
+  - parsec
+  - html
+  - filepath
+  - split
+  - ghc-prof
+  - scientific
+
+executables:
+  Autobahn:
+    source-dirs: src
+    main: Main.hs
+    dependencies: []
+    ghc-options: -O2 -rtsopts "-with-rtsopts=-T"
+

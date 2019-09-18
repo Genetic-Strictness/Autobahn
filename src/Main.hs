@@ -65,7 +65,7 @@ main = do
                                      return Cfg { projectDir = a
                                                 , timeBudget = deriveFitnessTimeLimit baseTime
                                                 , getBaseTime = baseTime
-	                                        , coverage = filter (isSuffixOf ".hs") allFiles
+                                                , coverage = filter (isSuffixOf ".hs") allFiles
                                                 , executable = ""
                                                 , fitnessMetric = RUNTIME
                                                 , getBaseMetric = baseMetric
@@ -113,15 +113,15 @@ gmain autobahnCfg = do
             $ addExtension (projDir ++ "/" ++ (takeBaseName projDir)) "prof"
 
     let hs'     = compileFiles hs 
-	hsFiles = fst $ unzip hs'
+        hsFiles = fst $ unzip hs'
   
     extraFiles <- checkFiles hsFiles filesInDir 
    
     let files      = hsFiles \\ extraFiles
         noCutFiles = (length filesInDir) - (length files)
-	cutFiles   = filesInDir \\ files
+        cutFiles   = filesInDir \\ files
 
-    let cutFiles'         = map (\x -> projDir ++ "/" ++ x) cutFiles	
+    let cutFiles'         = map (\x -> projDir ++ "/" ++ x) cutFiles
     cutPs <- sequence $ map readBangs cutFiles' 
 
     putStrLn "Original files in directory:"
@@ -130,9 +130,9 @@ gmain autobahnCfg = do
     print cutFiles
  
     let noCutPats = foldl (\acc x -> acc + length x) 0 cutPs 
-	resPre    = "noExtraFiles\t" ++ (show $ length extraFiles) ++ "\textraFiles\t" 
+        resPre    = "noExtraFiles\t" ++ (show $ length extraFiles) ++ "\textraFiles\t" 
                     ++ (show extraFiles) ++ "\tnoCutFiles\t" ++ (show noCutFiles) 
-		    ++ "\tnoCutPats\t" ++ (show noCutPats)
+                    ++ "\tnoCutPats\t" ++ (show noCutPats)
 
 --------------------Autobahn-----------------------
     putStrLn $ ">>>>>>>>>>>>>>>AUTOBAHN 1.0>>>>>>>>>>>>>>>"
@@ -157,16 +157,16 @@ gmain autobahnCfg = do
                         Just s -> s
                         Nothing -> (2.0, []) :: G1.Score
         atbResult = if (fst score) > 1 then vecPool else e
-	bitVec    = map B.toBits e
+        bitVec    = map B.toBits e
 
     progs' <- sequence $ map (uncurry editBangs) $ zip absPaths bitVec 
 
     let bestMetricPerc = fst $ D.fromJust $ fst $ head $ filter (\x -> D.isJust $ fst x) es
     checkImprovement (bestMetricPerc*baseTime) baseTime
     
-    let	origNumBangs   = countBangs bs
-	autNumBangs    = countBangs bitVec 
-	resAut         = "baseTime\t1" ++ "\torigNumBangs\t" ++ (show origNumBangs) 
+    let origNumBangs   = countBangs bs
+        autNumBangs    = countBangs bitVec 
+        resAut         = "baseTime\t1" ++ "\torigNumBangs\t" ++ (show origNumBangs) 
                          ++ "\tAut1Time\t" ++ (show bestMetricPerc) ++ "\tAut1Bangs\t" 
                          ++ (show autNumBangs)  
 
@@ -214,7 +214,7 @@ gmain autobahnCfg = do
     benchmark (defaultCfgWithProjectDir projDir) 1
     hotSpots <- parseProfile (profileMetric autobahnCfg) (hotSpotThresh autobahnCfg) 
 --                  $ addExtension (takeBaseName projDir) "prof"
-		  $ addExtension (projDir ++ "/" ++ (takeBaseName projDir)) "prof"
+                  $ addExtension (projDir ++ "/" ++ (takeBaseName projDir)) "prof"
     
     let hotSpots'     = compileFiles hotSpots
 
@@ -248,8 +248,8 @@ gmain autobahnCfg = do
     putStrLn ">>>>>>>>>>>>>>FINISH MIN>>>>>>>>>>>>>>>"
 
     let timeRatio = minTime/surTime
-    	bangRatio = (fromIntegral minNumBangs)/(fromIntegral surNumBangs)
-    	resPost   = "Aut2:\toriginalTime 1\torigBangs\t" ++ (show origNumBangs) 
+        bangRatio = (fromIntegral minNumBangs)/(fromIntegral surNumBangs)
+        resPost   = "Aut2:\toriginalTime 1\torigBangs\t" ++ (show origNumBangs) 
                      ++ "\tAut1Time\t" ++ (show (surTime/baseTime)) ++ "\tAut1Bangs\t" ++ (show surNumBangs) 
                      ++ "\tAut2Time\t" ++ (show (minTime/baseTime)) ++ "\tAut2Bangs\t" ++ (show minNumBangs)
     writeFile "minresults" (resPre ++ "\n" ++ resAut ++ "\n" ++ resPost)

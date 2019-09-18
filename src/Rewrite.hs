@@ -13,6 +13,8 @@ import Language.Haskell.Exts
 import Control.Monad
 import Control.Monad.State.Strict
 import Control.DeepSeq
+import Control.Monad.Fail (MonadFail(..))
+import Data.Functor.Identity (Identity(..))
 
 findPats :: (Data (Pat SrcSpanInfo), Data a)=> a -> [Pat SrcSpanInfo]
 findPats = universeBi
@@ -67,16 +69,19 @@ editBangs path vec = do
     ParseFailed _ e -> error $ path ++ ": " ++ e
     ParseOk a       -> return $ prettyPrint $ stripTop $ fst $ changeBangs vec a
 
+instance MonadFail Identity where
+  fail = undefined
+
 changeBangs :: [Bool] -> Module SrcSpanInfo -> (Module SrcSpanInfo, [Bool])
 changeBangs bools x = runState (transformBiM go x) bools
-  where go :: (MonadState [Bool] m, Uniplate (Pat SrcSpanInfo)) => Pat SrcSpanInfo -> m (Pat SrcSpanInfo)
+  where go :: (Uniplate (Pat SrcSpanInfo)) => Pat SrcSpanInfo -> State [Bool] (Pat SrcSpanInfo)
         go pb@(PBangPat l p) = do
            (b:bs) <- get
            put bs
            if b
              then return pb
              else return p
-	go pp = do
+        go pp = do
            (b:bs) <- get
            put bs
            if b

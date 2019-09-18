@@ -25,12 +25,6 @@ import Rewrite (readBangs)
 type Score = (Double, [Int])
 type FitnessRun = [BangVec] -> IO Score
 
--- TODO: implement in case we ever need to parse Bit (Bang) Vectors
-readsBV = undefined
-
-instance Read BangVec where -- TODO is this ok?
-  readsPrec _ s = readsBV
-
 printBits :: [Bool] -> String
 printBits = concatMap (\b -> if b then "1" else "0")
 
