@@ -59,7 +59,7 @@ main = do
             return cfg
           manufactureCfg args = do
                                      [a, b, c, d, e, f, g] <- getArgs
-                                     (baseTime, baseMetric) <- benchmark (defaultCfgWithProjectDir a) 1
+                                     (baseTime, baseMetric) <- benchmark (defaultCfgWithProjectDir a defaultExecutable) 1
                                      allFiles <- getDirectoryContents a
                                      print (baseTime, baseMetric)
                                      return Cfg { projectDir = a
@@ -80,6 +80,11 @@ main = do
                                                 , profileMetric = g
                                                 }
 
+mkCfg projDir exe inpArgs =
+  (defaultCfgWithProjectDir projDir exe)
+    { inputArgs = inpArgs
+    }
+
 gmain :: Cfg -> IO ()
 gmain autobahnCfg = do
     let projDir = projectDir autobahnCfg
@@ -89,6 +94,7 @@ gmain autobahnCfg = do
         fitnessReps = fitnessRuns autobahnCfg
         baseTime  = getBaseTime autobahnCfg
         baseMetric  = getBaseMetric autobahnCfg
+        inpArgs = inputArgs autobahnCfg
     putStrLn $ "Optimizing " ++ projDir
     putStrLn $ ">>>>>>>>>>>>>>>START OPTIMIZATION>>>>>>>>>>>>>>>"
     putStrLn $ "pop: " ++ (show $ pop autobahnCfg)
@@ -108,7 +114,7 @@ gmain autobahnCfg = do
 
     putStrLn $ ">>>>>>>>>>>>>>>PRE-OPTIMIZATION>>>>>>>>>>>>>>>"
 
-    benchmark (defaultCfgWithProjectDir projDir) 1
+    benchmark (mkCfg projDir exe inpArgs) 1
     hs <- parseProfile (profileMetric autobahnCfg) (hotSpotThresh autobahnCfg)
             -- $ addExtension (takeBaseName projDir) "prof"
             $ addExtension (projDir ++ "/" ++ (takeBaseName exe)) "prof"
@@ -212,7 +218,7 @@ gmain autobahnCfg = do
     unopt_progs <- sequence $ map (uncurry editBangs) $ zip surPaths (map (\x -> fst (unzip (snd x))) bsUnopt)
     sequence $ map (uncurry writeFile) $ zip absPaths unopt_progs
 
-    benchmark (defaultCfgWithProjectDir projDir) 1
+    benchmark (mkCfg projDir exe inpArgs) 1
     hotSpots <- parseProfile (profileMetric autobahnCfg) (hotSpotThresh autobahnCfg)
 --                  $ addExtension (takeBaseName projDir) "prof"
                   $ addExtension (projDir ++ "/" ++ (takeBaseName projDir)) "prof"
@@ -224,7 +230,7 @@ gmain autobahnCfg = do
     progsA <- sequence $ map readFile surPaths
     sequence $ map (uncurry writeFile) $ zip absPaths progsA
     bsA      <- sequence $ map readMinBangs absPaths
-    (surTime, surMetric) <- benchmark (defaultCfgWithProjectDir projDir) 1
+    (surTime, surMetric) <- benchmark (mkCfg projDir exe inpArgs) 1
     print ("SUR TIME IS " ++ (show surTime))
     checkImprovement surTime baseTime
 
@@ -234,7 +240,7 @@ gmain autobahnCfg = do
       let bs'' = modBangs (hotSpots' \\ [src]) bsHS
       progs'' <- sequence $ map (uncurry editBangs) $ zip surPaths (map (\x -> fst $ unzip $ snd x) bs'')
       sequence $ map (uncurry writeFile) $ zip absPaths progs''
-      (tempTime, tempBaseMetric) <- benchmark (defaultCfgWithProjectDir projDir) 1
+      (tempTime, tempBaseMetric) <- benchmark (mkCfg projDir exe inpArgs) 1
       if (((tempTime - surTime)/surTime) > (absenceImpact autobahnCfg)) then return [src] else return []) hotSpots'
 
     let minBangs'    = concat minBangs
@@ -243,7 +249,7 @@ gmain autobahnCfg = do
         surNumBangs  = foldl (\acc (f, b) -> acc + (numBangs b)) 0 bsA
     min_progs <- sequence $ map (uncurry editBangs) $ zip surPaths (map (\x -> fst $ unzip $ snd x) bs')
     sequence $ map (uncurry writeFile) $ zip absPaths min_progs
-    (minTime, minMetric) <- benchmark (defaultCfgWithProjectDir projDir) 1
+    (minTime, minMetric) <- benchmark (mkCfg projDir exe inpArgs) 1
     checkRunTimeError minTime
 
     putStrLn ">>>>>>>>>>>>>>FINISH MIN>>>>>>>>>>>>>>>"

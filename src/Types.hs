@@ -12,6 +12,7 @@ module Types
   , defaultProjDir
   , defaultTimeLimit
   , defaultCoverage
+  , defaultExecutable
   ) where
 import Data.Int (Int64)
 import Data.BitVector (BV, fromBits, toBits, size, ones)
@@ -116,9 +117,9 @@ defaultCfg = Cfg
   , profileMetric = defaultProfile
   }
 
-defaultCfgWithProjectDir a = Cfg
+defaultCfgWithProjectDir a exe = Cfg
   { projectDir = a
-  , executable = defaultExecutable
+  , executable = exe -- defaultExecutable
   , timeBudget = defaultTimeLimitSec
   , getBaseTime = 0.0 - 1.0
   , coverage = words defaultCoverage
