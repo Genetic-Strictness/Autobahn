@@ -5,24 +5,20 @@ A tool for inferring strictness annotations in Haskell programs using a genetic 
 ## Build and Run
 
 Autobahn uses [stack](https://github.com/commercialhaskell/stack) to build and run.
-It has been tested with [stack lts-7.2](https://github.com/fpco/lts-haskell/blob/master/lts-7.2.yaml).
+It currently builds with [stack lts-14.6](https://github.com/fpco/lts-haskell/blob/master/lts-14.6.yaml).
 
 Build with
 
 ```
-> stack init --solver
-> stack setup
 > stack build
 > stack install
 ```
 
-For newer versions of GHC, `stack init` may fail to resolve the necessary packages,
-in which case you will need to initialize with `stack init --solver --install-ghc`.
+WARNING: Autobahn will overwrite the original source of any project you point it at.
+You should copy or clone your project into a fresh / temporary directory before
+running Autobahn on it.
 
-WARNING: Autobahn will overwrite the original source of your project. You should
-copy or clone your project into a fresh / temporary directory.
-
-Then run the executable with e.g. (assuming `$HOME/.local/bin` is in your PATH):
+Once you have done this, run the executable with e.g. (assuming `$HOME/.local/bin` is in your PATH):
 
 ```
 > cd test/hello
@@ -38,7 +34,8 @@ in the event that `config.atb` is not found.
 Currently,
 
 - Autobahn requires the program builds with cabal (unless the program is nofib).
-- You must specify `ghc-options: -rtsopts "-with-rtsopts=-T"` in your `executable` section.
+- You must specify `ghc-options: -rtsopts "-with-rtsopts=-T"` in the `executable` section
+  of your `project.cabal` file.
 - The name of the project and the basename of `main-is` must be the same
 - Any files that Autobahn profiles must already have the `BangPatterns` extension enabled
   in the `LANGUAGE` section at the top of each file.
@@ -76,6 +73,7 @@ create the file below called `config.atb`.
 projectDirectory = "/home/pat/haskell-projects/bintree"
 budgetTime = 0.1h
 coverage = "Main.hs"
+executable = "Main.hs"
 targetMetric = "peakAlloc"
 inputArg = "5 7 8 0.05 0.06 RT"
 ```
