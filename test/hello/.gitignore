@@ -1,0 +1,5 @@
+/cabal.project.local
+*~
+/dist*
+/*.prof
+/*.temp

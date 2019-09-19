@@ -1,3 +1,4 @@
+/*.lock
+/Autobahn.cabal
 dist
 .stack-work
-stack.yaml

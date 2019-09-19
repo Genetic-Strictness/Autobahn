@@ -1,0 +1,7 @@
+projectDirectory = "."
+budgetTime = 0.01h
+coverage = "atom.hs"
+executable = "atom.hs"
+targetMetric = "peakAlloc"
+fitnessRuns = 1
+inputArg = "2000"

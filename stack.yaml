@@ -1,0 +1,18 @@
+
+#resolver: lts-7.2
+resolver: lts-14.6
+
+packages:
+- '.'
+
+# Dependency packages to be pulled from upstream that are not in the resolver
+extra-deps:
+- GA-1.0
+- bitwise-1.0.0.1
+
+# Override default flag values for local packages and extra-deps
+flags: {}
+
+# Extra package databases containing global packages
+extra-package-dbs: []
+

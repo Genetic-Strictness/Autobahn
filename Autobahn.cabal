@@ -1,96 +1,65 @@
--- The name of the package.
-name:                Autobahn
+cabal-version: 1.12
 
--- The package version.  See the Haskell package versioning policy (PVP) 
--- for standards guiding when and how versions should be incremented.
--- http://www.haskell.org/haskellwiki/Package_versioning_policy
--- PVP summary:      +-+------- breaking API changes
---                   | | +----- non-breaking API additions
---                   | | | +--- code changes with no API change
-version:             0.2.0.0
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: c4601317d1bcd2b088ef815a5cd5fb2440d7860f0c4c4e8cf9d776c5420c05a4
 
--- A short (one-line) description of the package.
-synopsis: A tool for inferring strictness annotations in Haskell programs.
+name:           Autobahn
+version:        2.0.0.0
+description:    A tool for inferring strictness annotations in Haskell programs.
+homepage:       https://github.com/Genetic-Strictness/Autobahn#readme
+bug-reports:    https://github.com/Genetic-Strictness/Autobahn/issues
+author:         Marilyn Sun, Yisu Remy Wang
+maintainer:     19marilyns@gmail.com
+copyright:      2019
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    LICENSE
 
--- A longer description of the package.
--- description:         
+source-repository head
+  type: git
+  location: https://github.com/Genetic-Strictness/Autobahn
 
--- The license under which the package is released.
--- license:             
-
--- The file containing the license text.
-license-file:        LICENSE
-
--- The package author(s).
-author:              Yisu Remy Wang
-
--- An email address to which users can send suggestions, bug reports, and 
--- patches.
-maintainer:          remywang@protonmail.com
-
--- A copyright notice.
--- copyright:           
-
--- category:            
-
-build-type:          Simple
-
--- Extra files to be distributed with the package, such as examples or a 
--- README.
-extra-source-files:  README.md
-
--- Constraint on the version of Cabal needed to build this package.
-cabal-version:       >=1.10
-
---  
 executable Autobahn
-  -- .hs or .lhs file containing the Main module.
-  main-is:             Main.hs
-  
-  -- LANGUAGE extensions used by modules in this package.
-  other-extensions:    BangPatterns, FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances
- 
-  other-modules: Config, GeneAlg, Profiling, Result, Rewrite, Types
-
-  -- Other library packages from which modules are imported.
-
-  build-depends:        base >=4.9
-                      , random
-                      , GA
-                      , process
-                      , bitwise
-                      , text
-                      , deepseq
-                      , haskell-src-exts
-                      , directory
-                      , filepath
-                      , bv
-                      , mtl
-                      , uniplate
-                      , criterion
-                      , parsec
-                      , html
-                      , filepath
-  
+  main-is: Main.hs
+  other-modules:
+      Config
+      GeneAlg
+      GeneAlg2
+      Min
+      Parse
+      Profiling
+      Result
+      Rewrite
+      Types
+      Utils
+      Paths_Autobahn
+  hs-source-dirs:
+      src
   ghc-options: -O2 -rtsopts "-with-rtsopts=-T"
-  -- Directories containing source files.
-  hs-source-dirs: src/     
-  
-  -- Base language which the package is written in.
-  default-language:    Haskell2010
- 
-test-suite test-autobahn
-  type:           exitcode-stdio-1.0
-  main-is:        test/Test.hs
-  build-depends:  base
-                , process
-                , directory
-                , QuickCheck
-                , HUnit
-                , Cabal
-                , test-framework
-                , test-framework-hunit
-                , test-framework-quickcheck2
-
+  build-depends:
+      GA
+    , base >=4.8
+    , bitwise
+    , bv
+    , criterion
+    , deepseq
+    , directory
+    , filepath
+    , ghc-prof
+    , haskell-src-exts >=1.19
+    , html
+    , mtl
+    , parsec
+    , process
+    , random
+    , scientific
+    , split
+    , text
+    , uniplate
   default-language: Haskell2010
-

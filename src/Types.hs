@@ -1,14 +1,21 @@
 module Types
   ( MetricType(..)
+  , AlgorithmTy(..)
+  , BangVec(..)
+  , Time(..)
+  , CCSrc(..)
   , Cfg(..)
   , CfgAST(..)
   , defaultCfg
+  , defaultCfgWithProjectDir
   , Int64
   , defaultProjDir
   , defaultTimeLimit
   , defaultCoverage
+  , defaultExecutable
   ) where
 import Data.Int (Int64)
+import Data.BitVector (BV, fromBits, toBits, size, ones)
 
 data MetricType = ALLOC | GC | RUNTIME
 
@@ -17,7 +24,13 @@ instance Show MetricType where
     show GC = "gc"
     show RUNTIME = "runtime"
 
-data Cfg = Cfg 
+data AlgorithmTy = ORIGINAL | MINIMIZE
+
+instance Show AlgorithmTy where
+    show ORIGINAL = "original"
+    show MINIMIZE = "minimize"
+
+data Cfg = Cfg
   { projectDir :: String
   , timeBudget :: Double
   , getBaseTime :: Double
@@ -30,9 +43,12 @@ data Cfg = Cfg
   , arch :: Int
   , fitnessRuns :: Int64
   , inputArgs :: String
-  } deriving Show
+  , algorithm :: AlgorithmTy
+  , absenceImpact :: Double
+  , hotSpotThresh :: Double
+  , profileMetric :: String } deriving Show
 
-data CfgAST = 
+data CfgAST =
     BUDGET Double
   | DIR String
   | SRCS [String]
@@ -41,7 +57,13 @@ data CfgAST =
   | FITRUNS Integer
   | FILE [CfgAST]
   | EXE String
+  | ALG AlgorithmTy
+  | PROFILE String
   deriving Show
+
+type BangVec = BV
+type Time = Double
+type CCSrc = [([Char], (Int, Int))]
 
 defaultProjDir :: FilePath
 defaultProjDir = "."
@@ -61,11 +83,20 @@ defaultExecutable = "Main.hs"
 defaultMetric :: MetricType
 defaultMetric = RUNTIME
 
+defaultProfile :: String
+defaultProfile = "RT"
+
 defaultInput :: String
 defaultInput = ""
 
 defaultFitRuns :: Integer
 defaultFitRuns = toInteger 1
+
+defaultHotSpotThresh :: Double
+defaultHotSpotThresh = 0.05
+
+defaultAbsenceImpact :: Double
+defaultAbsenceImpact = 0.06
 
 defaultCfg = Cfg
   { projectDir = defaultProjDir
@@ -80,5 +111,27 @@ defaultCfg = Cfg
   , arch = 1
   , fitnessRuns = fromIntegral defaultFitRuns
   , inputArgs = defaultInput
+  , algorithm = ORIGINAL
+  , absenceImpact = defaultAbsenceImpact
+  , hotSpotThresh = defaultHotSpotThresh
+  , profileMetric = defaultProfile
   }
 
+defaultCfgWithProjectDir a exe = Cfg
+  { projectDir = a
+  , executable = exe -- defaultExecutable
+  , timeBudget = defaultTimeLimitSec
+  , getBaseTime = 0.0 - 1.0
+  , coverage = words defaultCoverage
+  , fitnessMetric = defaultMetric
+  , getBaseMetric = 0.0 - 1.0
+  , pop = 1
+  , gen = 1
+  , arch = 1
+  , fitnessRuns = fromIntegral defaultFitRuns
+  , inputArgs = defaultInput
+  , algorithm = ORIGINAL
+  , absenceImpact = defaultAbsenceImpact
+  , hotSpotThresh = defaultHotSpotThresh
+  , profileMetric = defaultProfile
+  }

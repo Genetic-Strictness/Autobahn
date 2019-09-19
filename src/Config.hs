@@ -23,9 +23,9 @@ import System.IO
 runs :: Int64
 runs = 1
 
--- 
+--
 -- CONFIG FOR GENETIC ALG
--- 
+--
 
 deriveFitnessTimeLimit :: Double -> Double
 deriveFitnessTimeLimit = (*) 2
@@ -42,7 +42,7 @@ g = mkStdGen 0 -- random generator
 readLnWDefault :: Read a => a -> IO a
 readLnWDefault def = do
   cont <- getLine
-  case readMaybe cont 
+  case readMaybe cont
     of Nothing -> return def
        Just res -> return res
 
@@ -50,7 +50,7 @@ readLnWDefault def = do
  - Create the configuration specific to the GA library
  -}
 createGAConfig :: Cfg -> GAConfig
-createGAConfig cfg = GAConfig 
+createGAConfig cfg = GAConfig
   { getPopSize            = pop cfg
   , getArchiveSize        = arch cfg
   , getMaxGenerations     = gen cfg
@@ -66,7 +66,7 @@ createGAConfig cfg = GAConfig
  -  Read from the command line and produce an Autobahn Configuration
  -}
 cliCfg :: IO Cfg
-cliCfg = do 
+cliCfg = do
   putStrLn "No config.atb file found, please specify parameters as prompted"
   putStrLn "<Enter> to use [defaults]"
 
@@ -123,7 +123,7 @@ readCfg fp = do {
 
 {-
  - Determine the configuration from the time limit and the base time
- - Derived from 
+ - Derived from
  -    (1) the ratio of generations to population, 4 : 3, from the paper and
  -    (2) generations * population * (2 * baseTime) = timeLimit
  -}
@@ -181,7 +181,14 @@ convertToCfg ((FILE inner) : ast) cfg = convertToCfg ast $ convertToCfg inner cf
 convertToCfg ((INPUTS args) : ast) cfg = convertToCfg ast $ cfg { inputArgs = concat args }
 -- Ignore the other AST Nodes
 convertToCfg ((EXE exe) : ast) cfg = convertToCfg ast $ cfg { executable = exe }
+convertToCfg ((ALG alg) : ast) cfg = convertToCfg ast $ cfg { algorithm = alg }
 convertToCfg ((_) : ast)          cfg = convertToCfg ast cfg
+
+algToType :: String -> AlgorithmTy
+algToType "genetic" = ORIGINAL
+algToType "minimize" = MINIMIZE
+algToType _ = error "Unknown algorithm"
+
 
 calculateInputs :: Cfg -> IO Cfg
 calculateInputs cfg = do
@@ -195,7 +202,7 @@ calculateInputs cfg = do
                          }
 
 parseCfgFile :: SourceName -> Line -> Column -> String -> Either ParseError [CfgAST]
-parseCfgFile fileName ln col text = 
+parseCfgFile fileName ln col text =
   PP.parse cfgDefs fileName text
   where
     cfgDefs = do {
@@ -270,7 +277,7 @@ projDirRule = do {
 targetMetricRule :: PS.Parser CfgAST
 targetMetricRule = do {
                    reserved "targetMetric"
-                   ; reservedOp "=" 
+                   ; reservedOp "="
                    ; x <- parseMetric
                    ; return $ METRIC x
                    }
@@ -307,6 +314,21 @@ exeRule = do
   exe <- stringLiteral
   return $ EXE exe
 
+algChoice :: PS.Parser CfgAST
+algChoice = do
+  reserved "algorithm"
+  reservedOp "="
+  alg <- parseAlg
+  return $ ALG alg
+
+parseAlg :: PS.Parser AlgorithmTy
+parseAlg = do {
+           x <- stringLiteral
+           ; case x of
+               "original" -> return $ ORIGINAL
+               "minimize" -> return $ MINIMIZE
+           }
+
 ---- Lexer ----
 
 lexer :: PT.TokenParser ()
@@ -314,7 +336,8 @@ lexer = PT.makeTokenParser $ haskellStyle
   { reservedOpNames = ["="]
     , reservedNames = ["budgetTime", "confidence", "coverage",
                        "targetMetric", "inputArg", "fitnessRuns",
-                       "projectDirectory", "executable"]
+                       "projectDirectory", "executable",
+                       "algorithm"]
   }
 
 whiteSpace = PT.whiteSpace  lexer
