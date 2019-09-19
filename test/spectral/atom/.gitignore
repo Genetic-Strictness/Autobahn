@@ -1,0 +1,6 @@
+/.depend*
+/*.prof
+/*.temp
+/cabal.project.local*
+/autobahn-*
+/minresults

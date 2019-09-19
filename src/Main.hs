@@ -50,7 +50,7 @@ main = do
   putStrLn "Starting optimization process..."
   gmain cfg
   putStrLn $ "Optimization finished, please inspect and select candidate changes "
-   ++ "(found in AutobahnResults under project root)"
+   ++ "(found in `autobah-results/` directory under project root)"
       where
           gatherCfg = do
             putStrLn "Configure optimization..."
@@ -221,7 +221,7 @@ gmain autobahnCfg = do
     benchmark (mkCfg projDir exe inpArgs) 1
     hotSpots <- parseProfile (profileMetric autobahnCfg) (hotSpotThresh autobahnCfg)
 --                  $ addExtension (takeBaseName projDir) "prof"
-                  $ addExtension (projDir ++ "/" ++ (takeBaseName projDir)) "prof"
+                  $ addExtension (projDir ++ "/" ++ (takeBaseName exe)) "prof"
 
     let hotSpots'     = compileFiles hotSpots
 

@@ -55,17 +55,17 @@ benchmark !(cfg @ Cfg
       where
         projDir = projectDir cfg
         mainFile = executable cfg
-        runProj = "cd " ++ projDir ++ "; which cabal; timeout " ++ (show . round $ timeLimit)
+        runProj = "cd " ++ projDir ++ "; cabal build -v0; timeout " ++ (show . round $ timeLimit)
             ++ "s cabal run " ++ takeBaseName mainFile
                         ++ " -- " ++ inputArgs cfg
-                        ++ " -q +RTS -pa -ttiming.temp --machine-readable"
-                        ++ "" -- " > /dev/null && sleep 1"
+                        ++ " +RTS -pa -ttiming.temp --machine-readable"
+                        ++ " > /dev/null && sleep 1"
 
 {-
 -- For nofib makefile specifically
         runProj = "make -k mode=norm > nofib-gen 2>&1"
 -}
-        cleanProj = "cd " ++ projDir ++ "; rm -f timing.temp"
+        cleanProj = "cd " ++ projDir ++ "; cabal clean; rm -f timing.temp"
         executeProj = do
           d <- getCurrentDirectory
           putStrLn d

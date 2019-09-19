@@ -1,0 +1,20 @@
+name: atom
+version: 1.0.0.0
+license: BSD3
+license-file: LICENSE
+stability: stable
+category: Console, Text
+cabal-version: >= 1.6
+build-type: Simple
+
+flag threaded
+  default: False
+
+executable atom
+  hs-source-dirs: .
+  main-is: atom.hs
+  build-depends: base >= 4.2 && < 5
+
+  ghc-options: -O2 -rtsopts "-with-rtsopts=-T"
+  if flag(threaded)
+     ghc-options: -threaded
