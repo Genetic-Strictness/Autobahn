@@ -32,6 +32,6 @@ addons:
 script:
 - pwd; ls; stack --no-terminal --skip-ghc-check build
 - stack --no-terminal --skip-ghc-check install
-- cd test && ./testme
+#- cd test && ./testme
 #  - time stack --no-terminal test
 
