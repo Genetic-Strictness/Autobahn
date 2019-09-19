@@ -13,7 +13,7 @@ test:
 	time cabal run $(DIR) -- $(ARGS)
 
 clean:
-	rm -f *.prof *.temp *~ cabal.project.local $(DIR)
+	rm -f *.prof *.temp *~ cabal.project.local $(DIR) .depend .depend.bak
 	rm -rf autobahn-*
 	rm -f minresults
 	rm -rf dist-newstyle

@@ -4,4 +4,4 @@ coverage = "atom.hs"
 executable = "atom.hs"
 targetMetric = "peakAlloc"
 fitnessRuns = 1
-inputArg = "3000"
+inputArg = "2000"

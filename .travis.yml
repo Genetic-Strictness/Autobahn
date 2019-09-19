@@ -30,6 +30,8 @@ addons:
 #- stack --no-terminal --resolver lts-7.2 update
 
 script:
-- pwd; ls; stack --no-terminal --skip-ghc-check test
+- pwd; ls; stack --no-terminal --skip-ghc-check build
+- stack --no-terminal --skip-ghc-check install
+- cd test && ./testme
 #  - time stack --no-terminal test
 
